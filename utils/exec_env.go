@@ -28,17 +28,19 @@ func PredictRWSets(blkCtx evmtypes.BlockContext, header *types.Header, dbTx kv.T
 	return list
 }
 
-// 从前一个区块预测RW sets
-func GetTxsAndPredicts(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.Tx, blockNum uint64) (types.Transactions, accesslist.RWSetList) {
+// 从上一个区块的SNAPSHOT状态预测AccessLists，需要返回AccessedBy辅助建图
+func GetTxsAndPredicts(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.Tx, blockNum uint64) (types.Transactions, accesslist.RWSetList, *accesslist.RwAccessedBy) {
 	blk, header := GetBlockAndHeader(blockReader, ctx, dbTx, blockNum)
-
-	txs := blk.Transactions()
-	predictRwSets := make([]*accesslist.RWSet, txs.Len())
-
 	blkCtx := GetBlockContext(blockReader, blk, dbTx, header)
+	txs := blk.Transactions()
+
+	predictRwSets := make([]*accesslist.RWSet, txs.Len())
+	rwAccessedBy := accesslist.NewRwAccessedBy()
 
 	for i, tx := range txs {
 		predictRwSets[i] = PredictRWSets(blkCtx, header, dbTx, tx, blockNum)
+		// 为了建图, 生成对应记录的AccessedBy
+		rwAccessedBy.Add(predictRwSets[i], uint(i))
 	}
-	return txs, predictRwSets
+	return txs, predictRwSets, rwAccessedBy
 }

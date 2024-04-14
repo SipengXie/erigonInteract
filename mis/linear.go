@@ -87,40 +87,42 @@ func (s *LinearTime) Solve() {
 	}
 }
 
-func (s *LinearTime) minusDegree(id uint) {
-	neighbor := s.Graph.Vertices[id]
-	if !neighbor.IsDeleted {
+// 从neighborId那里删除了id
+func (s *LinearTime) dealWithNeighbor(neighborId, id uint) {
+	neighbor, ok := s.Graph.Vertices[neighborId]
+	if ok {
 		// d(w) = d(w) - 1
 		neighbor.Degree--
 		switch neighbor.Degree {
 		case 0:
-			s.IndependentSet.Add(id)
-			s.VerticesOne.Remove(id)
+			s.IndependentSet.Add(neighborId)
+			s.VerticesOne.Remove(neighborId)
 		case 1:
-			s.VerticesOne.Add(id)
-			s.VerticesTwo.Remove(id)
+			s.VerticesOne.Add(neighborId)
+			s.VerticesTwo.Remove(neighborId)
 		case 2:
-			s.VerticesTwo.Add(id)
-			s.VerticesGreaterThanThree.Remove(id)
+			s.VerticesTwo.Add(neighborId)
+			s.VerticesGreaterThanThree.Remove(neighborId)
 		}
+
+		delete(s.Graph.AdjacencyMap[neighborId], id)
 	}
 }
 
 func (s *LinearTime) deleteVertex(id uint) {
-	v := s.Graph.Vertices[id]
-	if v.IsDeleted {
+	v, ok := s.Graph.Vertices[id]
+	if !ok {
 		return // already deleted
+		// 在现在的实现下是走不到这里了，运行起来没错的话，这句话可以删掉
 	}
 	// for each neighbor w of v in G
-	for _, neighborId := range s.Graph.AdjacencyMap[id] {
-		s.minusDegree(neighborId)
+	for neighborId := range s.Graph.AdjacencyMap[id] {
+		s.dealWithNeighbor(neighborId, id)
 	}
 
 	// remove v from G, v1, v2, v3
-	v.IsDeleted = true
-	// s.VerticesOne.Remove(id)
-	// s.VerticesTwo.Remove(id)
-	// s.VerticesGreaterThanThree.Remove(id)
+	// 这下是彻底删掉了
+	delete(s.Graph.Vertices, id)
 	switch v.Degree {
 	case 0:
 		break
@@ -131,16 +133,15 @@ func (s *LinearTime) deleteVertex(id uint) {
 	default:
 		s.VerticesGreaterThanThree.Remove(id)
 	}
+	delete(s.Graph.AdjacencyMap, id)
 }
 
 func (s *LinearTime) degreeOneReduction() {
 	txId := s.VerticesOne.Pop().(uint)
 	s.VerticesOne.Add(txId)
-	for _, neighborId := range s.Graph.AdjacencyMap[txId] {
-		neighbor := s.Graph.Vertices[neighborId]
-		if !neighbor.IsDeleted {
-			s.deleteVertex(neighborId)
-		}
+	// for出来的都是存在图中的
+	for neighborId := range s.Graph.AdjacencyMap[txId] {
+		s.deleteVertex(neighborId)
 	}
 }
 
@@ -161,9 +162,9 @@ func (s *LinearTime) inexactReduction() {
 
 // 为Degree 2的端点找到不在path中的邻居
 func (s *LinearTime) getAlivedNeighbor(u uint) uint {
-	for _, neighBorId := range s.Graph.AdjacencyMap[u] {
+	for neighBorId := range s.Graph.AdjacencyMap[u] {
 		neighbor := s.Graph.Vertices[neighBorId]
-		if !neighbor.IsDeleted && neighbor.Degree != 2 {
+		if neighbor.Degree != 2 {
 			return neighBorId
 		}
 	}
@@ -184,14 +185,11 @@ func (s *LinearTime) degreeTwoPathReduction() {
 		if len(path) == 1 {
 			// 如果path只有一个元素,v和w是他的两个不同的邻居；
 			// 下面else的逻辑不能完成这个判断
-			for _, neighborId := range s.Graph.AdjacencyMap[path[0]] {
-				neighbor := s.Graph.Vertices[neighborId]
-				if !neighbor.IsDeleted {
-					if v == MAX_UINT {
-						v = neighborId
-					} else {
-						w = neighborId
-					}
+			for neighborId := range s.Graph.AdjacencyMap[path[0]] {
+				if v == MAX_UINT {
+					v = neighborId
+				} else {
+					w = neighborId
 				}
 			}
 		} else {
@@ -214,7 +212,7 @@ func (s *LinearTime) degreeTwoPathReduction() {
 
 				s.VerticesTwo.Remove(path[0])
 				for i := 1; i < len(path); i++ {
-					s.Graph.Vertices[path[i]].IsDeleted = true
+					s.Graph.RemoveVertex(path[i])
 					s.VerticesTwo.Remove(path[i])
 				}
 				// and add edge bwteen v1(path[0]) and w
@@ -229,17 +227,12 @@ func (s *LinearTime) degreeTwoPathReduction() {
 			// 因为所有被删除的点都在Path上，我们可以轻松的把他们拿下，而不用触发deleteVertex
 			// remove all vertices of path from G and V2
 			for _, v := range path {
-				s.Graph.Vertices[v].IsDeleted = true
+				s.Graph.RemoveVertex(v)
 				s.VerticesTwo.Remove(v)
 			}
 			// and add an edge, if not exists, between v and w
 			if !s.Graph.HasEdge(v, w) {
-				// 因为加了边，所以v,w度数不变
 				s.Graph.AddEdge(v, w)
-			} else {
-				// 因为没有加边，所以v,w度数都减一
-				s.minusDegree(v)
-				s.minusDegree(w)
 			}
 			// push vl,...,v1 into S
 			for i := len(path) - 1; i >= 0; i-- {
@@ -256,14 +249,11 @@ func (s *LinearTime) findLongestDegreeTwoPath(vId uint) ([]uint, bool) {
 	isCycle := true
 
 	s.dfsToFindDegreeTwoPath(vId, visited, &longestPath)
-	// if len(longestPath) == 1 {
-	// 	return longestPath, isCycle
-	// }
 
-	for _, vId := range longestPath {
-		for _, neighborId := range s.Graph.AdjacencyMap[vId] {
-			neighbor := s.Graph.Vertices[neighborId]
-			if !visited[neighborId] && !neighbor.IsDeleted {
+	// 判断是不是degree 2环，若是，那么每个点的两个邻居都会被访问过，即不存在没被访问过的邻居
+	for _, id := range longestPath {
+		for neighborId := range s.Graph.AdjacencyMap[id] {
+			if !visited[neighborId] {
 				isCycle = false
 				break
 			}
@@ -281,9 +271,9 @@ func (s *LinearTime) dfsToFindDegreeTwoPath(vId uint, visited map[uint]bool, pat
 	visited[vId] = true
 	*path = append(*path, vId)
 
-	for _, neighborId := range s.Graph.AdjacencyMap[vId] {
+	for neighborId := range s.Graph.AdjacencyMap[vId] {
 		neighbor := s.Graph.Vertices[neighborId]
-		if !visited[neighborId] && neighbor.Degree == 2 && !neighbor.IsDeleted {
+		if !visited[neighborId] && neighbor.Degree == 2 {
 			s.dfsToFindDegreeTwoPath(neighborId, visited, path)
 		}
 	}
@@ -298,16 +288,17 @@ func (s *LinearTime) pathReOrg(initPath []uint) []uint {
 		inPath[v] = true
 		if st == MAX_UINT {
 			// 看一下当前这个v是不是一个端点
-			for _, neighborId := range s.Graph.AdjacencyMap[v] {
+			for neighborId := range s.Graph.AdjacencyMap[v] {
 				neighbor := s.Graph.Vertices[neighborId]
-				if neighbor.Degree != 2 && !neighbor.IsDeleted {
+				if neighbor.Degree != 2 {
 					// 是端点
 					st = v
 					break
 				}
 			}
 		} else {
-			break
+			// 走完所有的initPath生成inPath
+			continue
 		}
 	}
 
@@ -320,9 +311,8 @@ func (s *LinearTime) pathReOrg(initPath []uint) []uint {
 func (s *LinearTime) dfsToReOrgPath(v uint, visited map[uint]bool, inPath map[uint]bool, path *[]uint) {
 	visited[v] = true
 	*path = append(*path, v)
-	for _, neighborId := range s.Graph.AdjacencyMap[v] {
-		neighbor := s.Graph.Vertices[neighborId]
-		if !visited[neighborId] && !neighbor.IsDeleted && inPath[neighborId] {
+	for neighborId := range s.Graph.AdjacencyMap[v] {
+		if !visited[neighborId] && inPath[neighborId] {
 			s.dfsToReOrgPath(neighborId, visited, inPath, path)
 		}
 	}

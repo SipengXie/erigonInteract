@@ -3,6 +3,7 @@ package accesslist
 import (
 	"crypto/sha256"
 	"encoding/json"
+	"sort"
 
 	"github.com/ledgerwatch/erigon-lib/common"
 )
@@ -168,4 +169,85 @@ type RWSetJson struct {
 func (rwj RWSetJson) ToString() string {
 	b, _ := json.Marshal(rwj)
 	return string(b)
+}
+
+// readBy / writeBy 所依赖的数据结构
+type AccessedBy map[common.Address]map[common.Hash]map[uint]struct{}
+
+func NewAccessedBy() AccessedBy {
+	return make(map[common.Address]map[common.Hash]map[uint]struct{})
+}
+
+func (accessedBy AccessedBy) Add(addr common.Address, hash common.Hash, txID uint) {
+	if _, ok := accessedBy[addr]; !ok {
+		accessedBy[addr] = make(map[common.Hash]map[uint]struct{})
+	}
+	if _, ok := accessedBy[addr][hash]; !ok {
+		accessedBy[addr][hash] = make(map[uint]struct{})
+	}
+	accessedBy[addr][hash][txID] = struct{}{}
+}
+
+// 从小到大返回一个记录被访问的txID的数组
+func (accessedBy AccessedBy) TxIds(addr common.Address, hash common.Hash) []uint {
+	txIds := make([]uint, 0)
+
+	if _, ok := accessedBy[addr]; !ok {
+		return txIds
+	} else if _, ok := accessedBy[addr][hash]; !ok {
+		return txIds
+	} else {
+		for txID := range accessedBy[addr][hash] {
+			txIds = append(txIds, txID)
+		}
+	}
+
+	sort.Slice(txIds, func(i, j int) bool {
+		return txIds[i] < txIds[j]
+	})
+	return txIds
+}
+
+type RwAccessedBy struct {
+	ReadBy  AccessedBy
+	WriteBy AccessedBy
+}
+
+func NewRwAccessedBy() *RwAccessedBy {
+	return &RwAccessedBy{
+		ReadBy:  NewAccessedBy(),
+		WriteBy: NewAccessedBy(),
+	}
+}
+
+func (rw *RwAccessedBy) Add(set *RWSet, txId uint) {
+	for addr, state := range set.ReadSet {
+		for hash := range state {
+			rw.ReadBy.Add(addr, hash, txId)
+		}
+	}
+	for addr, state := range set.WriteSet {
+		for hash := range state {
+			rw.WriteBy.Add(addr, hash, txId)
+		}
+	}
+}
+
+func (rw *RwAccessedBy) Copy() *RwAccessedBy {
+	newRw := NewRwAccessedBy()
+	for addr, hashMap := range rw.ReadBy {
+		for hash, txMap := range hashMap {
+			for txId := range txMap {
+				newRw.ReadBy.Add(addr, hash, txId)
+			}
+		}
+	}
+	for addr, hashMap := range rw.WriteBy {
+		for hash, txMap := range hashMap {
+			for txId := range txMap {
+				newRw.WriteBy.Add(addr, hash, txId)
+			}
+		}
+	}
+	return newRw
 }

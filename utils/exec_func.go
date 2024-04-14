@@ -102,7 +102,7 @@ func CCExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.
 	blkCtx := GetBlockContext(blockReader, block, dbTx, header)
 	ibs := GetState(params.MainnetChainConfig, dbTx, blockNum)
 
-	txs, predictRwSets := GetTxsAndPredicts(blockReader, ctx, dbTx, blockNum)
+	txs, predictRwSets, rwAccessedBy := GetTxsAndPredicts(blockReader, ctx, dbTx, blockNum)
 	trueRwSets, err := TrueRWSets(blockReader, ctx, dbTx, blockNum)
 	if err != nil {
 		return 0, 0, 0, 0, 0, 0, err
@@ -121,12 +121,12 @@ func CCExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.
 	// 建图分组
 	graphStart := time.Now()
 	// 使用预取RWset构建图
-	graph := GenerateVertexGroups(txs, predictRwSets)
+	vIdsGroups := GenerateVertexIdGroups(txs, rwAccessedBy)
 	graphTime := time.Since(graphStart)
 
 	groupstart := time.Now()
 	// 似乎已经不需要Rwsetgroup了，因为不需要再通过分组进行预取了
-	txGroup, _ := GenerateCCGroups(graph, txs, predictRwSets)
+	txGroup, _ := GenerateCCGroups(vIdsGroups, txs, predictRwSets)
 	// txGroup, RwSetGroup := utils.GenerateTxAndRWSetGroups(txs, predictRWSet)
 	groupTime := time.Since(groupstart)
 	createGraphTime := time.Since(graphStart)

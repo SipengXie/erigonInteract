@@ -23,9 +23,11 @@ func ExecToGenerateRWSet(fulldb *state.StateWithRwSets, tx types.Transaction, he
 	return rwSet, nil
 }
 
+// 只服务于True AceessList 不需要返回accessedBy
 func CreateRWSetsWithTransactions(fulldb *state.StateWithRwSets, blkCtx evmtypes.BlockContext, txs types.Transactions, header *types.Header) ([]*accesslist.RWSet, []error) {
 	ret := make([]*accesslist.RWSet, len(txs))
 	err := make([]error, len(txs))
+
 	for i, tx := range txs {
 		ret[i], err[i] = ExecToGenerateRWSet(fulldb, tx, header, blkCtx)
 	}

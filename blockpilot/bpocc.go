@@ -30,7 +30,7 @@ var txStack = stack.New()
 func BlockPilot(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.Tx, blockNum uint64) error {
 	blk, header := utils.GetBlockAndHeader(blockReader, ctx, dbTx, blockNum)
 	// 获取Tx和初始的stateDB
-	txs, _ := utils.GetTxsAndPredicts(blockReader, ctx, dbTx, blockNum)
+	txs, _, _ := utils.GetTxsAndPredicts(blockReader, ctx, dbTx, blockNum)
 
 	state := utils.GetState(params.MainnetChainConfig, dbTx, blockNum)
 

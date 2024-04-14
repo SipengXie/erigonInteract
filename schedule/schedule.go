@@ -34,17 +34,20 @@ func NewPipeLineExecutor() *PipeLineExecutor {
 	return pe
 }
 
-func (pe *PipeLineExecutor) PipeLineSchedule(txs types.Transactions, predictRwSets []*accesslist.RWSet) error {
+func (pe *PipeLineExecutor) PipeLineSchedule(txs types.Transactions, predictRwSets []*accesslist.RWSet, rwAccessedBy *accesslist.RwAccessedBy) error {
 	var wg sync.WaitGroup
 	resultCh := make(chan ScheduleRes, 3)
 	wg.Add(3)
+	// rwAccessedBy不是thread-safe的，所以我们随便复制几个传进去，后面再说改的事情
+	rwAccessedByCpy1 := rwAccessedBy.Copy()
+	rwAccessedByCpy2 := rwAccessedBy.Copy()
 
 	// fmt.Println("CC")
-	go CC(txs, predictRwSets, &wg, resultCh)
+	go CC(txs, predictRwSets, rwAccessedBy, &wg, resultCh)
 	// fmt.Println("DAG")
-	go DAG(txs, predictRwSets, &wg, resultCh)
+	go DAG(txs, predictRwSets, rwAccessedByCpy1, &wg, resultCh)
 	// fmt.Println("MIS")
-	go MIS(txs, predictRwSets, &wg, resultCh)
+	go MIS(txs, predictRwSets, rwAccessedByCpy2, &wg, resultCh)
 
 	wg.Wait()
 	close(resultCh)
@@ -67,10 +70,10 @@ func (pe *PipeLineExecutor) PipeLineSchedule(txs types.Transactions, predictRwSe
 }
 
 // CC 连通分量调度估算
-func CC(txs types.Transactions, predictRwSets []*accesslist.RWSet, wg *sync.WaitGroup, resultCh chan<- ScheduleRes) {
+func CC(txs types.Transactions, predictRwSets []*accesslist.RWSet, rwAccessedBy *accesslist.RwAccessedBy, wg *sync.WaitGroup, resultCh chan<- ScheduleRes) {
 	defer wg.Done()
 	// 无向图
-	vertexGroup := utils.GenerateVertexGroups(txs, predictRwSets)
+	vertexGroup := utils.GenerateVertexIdGroups(txs, rwAccessedBy)
 	// 分组
 	txsGroup, RWSetsGroup := utils.GenerateCCGroups(vertexGroup, txs, predictRwSets)
 	// 获取最大cost
@@ -98,9 +101,9 @@ func CC(txs types.Transactions, predictRwSets []*accesslist.RWSet, wg *sync.Wait
 }
 
 // DAG 有向无环图调度估算
-func DAG(txs types.Transactions, predictRwSets []*accesslist.RWSet, wg *sync.WaitGroup, resultCh chan<- ScheduleRes) {
+func DAG(txs types.Transactions, predictRwSets []*accesslist.RWSet, rwAccessedBy *accesslist.RwAccessedBy, wg *sync.WaitGroup, resultCh chan<- ScheduleRes) {
 	defer wg.Done()
-	groups := utils.GenerateDegreeZeroGroups(txs, predictRwSets)
+	groups := utils.GenerateTopoGroups(txs, rwAccessedBy)
 	// 获取最大cost
 	var maxCost uint64
 	maxCost = 0
@@ -126,10 +129,10 @@ func DAG(txs types.Transactions, predictRwSets []*accesslist.RWSet, wg *sync.Wai
 }
 
 // MIS 最大独立集调度估算
-func MIS(txs types.Transactions, predictRwSets []*accesslist.RWSet, wg *sync.WaitGroup, resultCh chan<- ScheduleRes) {
+func MIS(txs types.Transactions, predictRwSets []*accesslist.RWSet, rwAccessedBy *accesslist.RwAccessedBy, wg *sync.WaitGroup, resultCh chan<- ScheduleRes) {
 	defer wg.Done()
 	// 分组
-	groups := utils.GenerateMISGroups(txs, predictRwSets)
+	groups := utils.GenerateMISGroups(txs, rwAccessedBy)
 	// 获取最大cost
 	var maxCost uint64
 	maxCost = 0

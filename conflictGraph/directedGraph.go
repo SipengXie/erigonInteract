@@ -1,7 +1,5 @@
 package conflictgraph
 
-import "github.com/ledgerwatch/erigon-lib/common"
-
 // UndirectedGraph 表示无向图
 type DirectedGraph struct {
 	Vertices     map[uint]*Vertex           `json:"vertices"`     // 顶点集合
@@ -15,16 +13,16 @@ func NewDirectedGraph() *DirectedGraph {
 	}
 }
 
-func (g *DirectedGraph) AddVertex(tx common.Hash, id uint) {
+func (g *DirectedGraph) AddVertex(id uint) {
 	_, exist := g.Vertices[id]
 	if exist {
 		return
 	}
 	v := &Vertex{
-		TxId:      id,
-		TxHash:    tx,
-		IsDeleted: false,
-		Degree:    0,
+		TxId: id,
+		// TxHash: tx,
+		// IsDeleted: false,
+		Degree: 0,
 	}
 	g.Vertices[id] = v
 	g.AdjacencyMap[id] = make(map[uint]struct{})
@@ -39,11 +37,21 @@ func (g *DirectedGraph) AddEdge(source, destination uint) {
 }
 
 func (g *DirectedGraph) HasEdge(source, destination uint) bool {
-	_, ok := g.AdjacencyMap[source][destination]
+	_, ok := g.Vertices[source]
+	if !ok {
+		return false
+	}
+
+	_, ok = g.Vertices[destination]
+	if !ok {
+		return false
+	}
+
+	_, ok = g.AdjacencyMap[source][destination]
 	return ok
 }
 
-func (g *DirectedGraph) GetDegreeZero() [][]uint {
+func (g *DirectedGraph) GetTopo() [][]uint {
 	ans := make([][]uint, 0)
 	degreeZero := make([]uint, 0)
 	for id, v := range g.Vertices {
