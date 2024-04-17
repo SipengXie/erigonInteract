@@ -3,7 +3,6 @@ package gria
 import (
 	"container/heap"
 	"fmt"
-	"sort"
 
 	"github.com/ledgerwatch/erigon/core/types"
 )
@@ -77,7 +76,7 @@ func (s *sumArray) Pop() interface{} {
 	return x
 }
 
-func GreedyGrouping(txs types.Transactions, k int) {
+func GreedyGrouping(txs types.Transactions, k int) []SortingTxs {
 	avlTree := &AVLTree{}
 	var sum uint64
 	for i, tx := range txs {
@@ -129,10 +128,12 @@ func GreedyGrouping(txs types.Transactions, k int) {
 		min.sum += tx.Tx.GetGas()
 		heap.Push(&gasSums, min)
 	}
-	fmt.Println("Average:", average)
-	fmt.Println(gasSums)
-	for i, group := range result {
-		sort.Sort(group)
-		fmt.Println("Group", i, ":", group)
-	}
+	// fmt.Println("Average:", average)
+	// fmt.Println(gasSums)
+	// for i, group := range result {
+	// 	sort.Sort(group)
+	// 	fmt.Println("Group", i, ":", group)
+	// }
+
+	return result
 }

@@ -87,42 +87,41 @@ func (s *LinearTime) Solve() {
 	}
 }
 
-// 从neighborId那里删除了id
-func (s *LinearTime) dealWithNeighbor(neighborId, id uint) {
-	neighbor, ok := s.Graph.Vertices[neighborId]
-	if ok {
-		// d(w) = d(w) - 1
-		neighbor.Degree--
-		switch neighbor.Degree {
-		case 0:
-			s.IndependentSet.Add(neighborId)
-			s.VerticesOne.Remove(neighborId)
-		case 1:
-			s.VerticesOne.Add(neighborId)
-			s.VerticesTwo.Remove(neighborId)
-		case 2:
-			s.VerticesTwo.Add(neighborId)
-			s.VerticesGreaterThanThree.Remove(neighborId)
-		}
-
-		delete(s.Graph.AdjacencyMap[neighborId], id)
+// 更新Set的状态
+func (s *LinearTime) updateSet(neighbor *conflictgraph.Vertex) {
+	neighborId := neighbor.TxId
+	switch neighbor.Degree {
+	case 0:
+		s.IndependentSet.Add(neighborId)
+		s.VerticesOne.Remove(neighborId)
+	case 1:
+		s.VerticesOne.Add(neighborId)
+		s.VerticesTwo.Remove(neighborId)
+	case 2:
+		s.VerticesTwo.Add(neighborId)
+		s.VerticesGreaterThanThree.Remove(neighborId)
 	}
+
 }
 
 func (s *LinearTime) deleteVertex(id uint) {
 	v, ok := s.Graph.Vertices[id]
 	if !ok {
-		return // already deleted
+		panic("怎么会找不到呢")
 		// 在现在的实现下是走不到这里了，运行起来没错的话，这句话可以删掉
 	}
 	// for each neighbor w of v in G
 	for neighborId := range s.Graph.AdjacencyMap[id] {
-		s.dealWithNeighbor(neighborId, id)
+		neighbor, ok := s.Graph.Vertices[neighborId]
+		if !ok {
+			panic("Unexpected neighborId")
+		}
+		neighbor.Degree--
+		delete(s.Graph.AdjacencyMap[neighborId], id)
+		s.updateSet(neighbor)
 	}
 
 	// remove v from G, v1, v2, v3
-	// 这下是彻底删掉了
-	delete(s.Graph.Vertices, id)
 	switch v.Degree {
 	case 0:
 		break
@@ -133,6 +132,8 @@ func (s *LinearTime) deleteVertex(id uint) {
 	default:
 		s.VerticesGreaterThanThree.Remove(id)
 	}
+	// 这下是彻底删掉了
+	delete(s.Graph.Vertices, id)
 	delete(s.Graph.AdjacencyMap, id)
 }
 
@@ -161,7 +162,7 @@ func (s *LinearTime) inexactReduction() {
 }
 
 // 为Degree 2的端点找到不在path中的邻居
-func (s *LinearTime) getAlivedNeighbor(u uint) uint {
+func (s *LinearTime) getOutsideNeighbor(u uint) uint {
 	for neighBorId := range s.Graph.AdjacencyMap[u] {
 		neighbor := s.Graph.Vertices[neighBorId]
 		if neighbor.Degree != 2 {
@@ -193,8 +194,8 @@ func (s *LinearTime) degreeTwoPathReduction() {
 				}
 			}
 		} else {
-			v = s.getAlivedNeighbor(path[0])
-			w = s.getAlivedNeighbor(path[len(path)-1])
+			v = s.getOutsideNeighbor(path[0])
+			w = s.getOutsideNeighbor(path[len(path)-1])
 		}
 		if v == MAX_UINT || w == MAX_UINT {
 			panic("v or w is MAX_UINT")
@@ -215,7 +216,7 @@ func (s *LinearTime) degreeTwoPathReduction() {
 					s.Graph.RemoveVertex(path[i])
 					s.VerticesTwo.Remove(path[i])
 				}
-				// and add edge bwteen v1(path[0]) and w
+				// and add edge bwteen v1(path[0]) and w （v1的度不还是2吗）
 				s.Graph.AddEdge(path[0], w)
 				// push vl(path[-1]),...,v2(path[1]) into S
 				for i := len(path) - 1; i > 0; i-- {
@@ -226,13 +227,18 @@ func (s *LinearTime) degreeTwoPathReduction() {
 		} else {
 			// 因为所有被删除的点都在Path上，我们可以轻松的把他们拿下，而不用触发deleteVertex
 			// remove all vertices of path from G and V2
-			for _, v := range path {
-				s.Graph.RemoveVertex(v)
-				s.VerticesTwo.Remove(v)
+			for _, point := range path {
+				s.Graph.RemoveVertex(point)
+				s.VerticesTwo.Remove(point)
 			}
 			// and add an edge, if not exists, between v and w
 			if !s.Graph.HasEdge(v, w) {
+				// 这个情况下v,w的度没有变
 				s.Graph.AddEdge(v, w)
+			} else {
+				// 这个情况下v,w的度都减一了，要更新一下Set状态
+				s.updateSet(s.Graph.Vertices[v])
+				s.updateSet(s.Graph.Vertices[w])
 			}
 			// push vl,...,v1 into S
 			for i := len(path) - 1; i >= 0; i-- {

@@ -132,32 +132,33 @@ func (s *ScatterState) GetRefund() uint64 {
 
 func (s *ScatterState) GetCommittedState(addr common.Address, key *common.Hash, value *uint256.Int) {
 	s.GetState(addr, key, value)
-	return
+
 }
 
 func (s *ScatterState) GetState(addr common.Address, key *common.Hash, value *uint256.Int) {
 	state, exists := s.Storages.Load(addr)
 	if !exists {
-		value = u256.Num0
+		value.Clear()
 		return
 	}
 	storage := state.(*sync.Map)
-	res, exists := storage.Load(key)
+	res, exists := storage.Load(*key)
 	if exists {
 		*value = res.(uint256.Int)
 	}
+	value.Clear()
 }
 
 func (s *ScatterState) SetState(addr common.Address, key *common.Hash, value uint256.Int) {
 	state, exists := s.Storages.Load(addr)
 	if !exists {
 		storage := new(sync.Map)
-		storage.Store(key, value)
+		storage.Store(*key, value)
 		s.Storages.Store(addr, storage)
 		return
 	}
 	storage := state.(*sync.Map)
-	storage.Store(key, value)
+	storage.Store(*key, value)
 }
 
 func (s *ScatterState) GetTransientState(addr common.Address, key common.Hash) uint256.Int {

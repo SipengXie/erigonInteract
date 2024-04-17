@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 	"encoding/csv"
+	"erigonInteract/gria"
 	interactState "erigonInteract/state"
 	"erigonInteract/tracer"
 	"fmt"
@@ -107,9 +108,15 @@ func CCExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.
 	if err != nil {
 		return 0, 0, 0, 0, 0, 0, err
 	}
+	// for i, tx := range txs {
+	// 	if tx.GetTo().String() == "0xdAC17F958D2ee523a2206206994597C13D831ec7" {
+	// 		fmt.Println("Tx:", i)
+	// 		fmt.Println("PredictRWSet:", predictRwSets[i].ToJsonStruct().ToString())
+	// 	}
+	// }
 	// 用预测的和真实的rwsets来预取数据构建并发statedb
 	scatterState := interactState.NewScatterState()
-	// scatterState.Prefetch(ibs, predictRwSets)
+	scatterState.Prefetch(ibs, predictRwSets)
 	scatterState.Prefetch(ibs, trueRwSets)
 
 	// 准备线程池
@@ -131,29 +138,10 @@ func CCExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.
 	groupTime := time.Since(groupstart)
 	createGraphTime := time.Since(graphStart)
 
-	// // 准备状态数据库
-	// state, err := utils.GetState(chainDB, sdbBackend, blockNum-1)
-	// if err != nil {
-	// 	return 0, 0, 0, 0, 0, 0, 0, 0, err
-	// }
-	// fullcache := interactState.NewFullCacheConcurrent()
-	// // here we don't pre warm the data
-	// fullcache.Prefetch(state, predictRwSets)
-
-	// // 并发预取
-	// prefectStart := time.Now()
-	// cacheStates := utils.GenerateCacheStatesConcurrent(antsPool, fullcache, RwSetGroup, &antsWG)
-	// prefectTime := time.Since(prefectStart)
-
 	// 并发执行
 	execStart := time.Now()
 	tracer.ExecConflictedTxs(antsPool, txGroup, scatterState, header, blkCtx, &antsWG)
 	execTime := time.Since(execStart)
-
-	// // 并发合并
-	// mergeStart := time.Now()
-	// utils.MergeToCacheStateConcurrent(antsPool, cacheStates, fullcache, &antsWG)
-	// mergeTime := time.Since(mergeStart)
 
 	// 总时间
 	timeSum := time.Since(graphStart)
@@ -161,4 +149,239 @@ func CCExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.
 	// 返回建图时间，分组时间，建图分组总时间，预取时间，执行时间，合并时间，总时间
 	// return len(txs), int64(graphTime.Microseconds()), int64(groupTime.Microseconds()), int64(createGraphTime.Microseconds()), int64(prefectTime.Microseconds()), int64(execTime.Microseconds()), int64(mergeTime.Microseconds()), int64(timeSum.Microseconds()), nil
 	return len(txs), int64(graphTime.Microseconds()), int64(groupTime.Microseconds()), int64(createGraphTime.Microseconds()), int64(execTime.Microseconds()), int64(timeSum.Microseconds()), nil
+}
+
+func MISTest(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.Tx, blockNum uint64) error {
+	misfile, err := os.Create(("mis.csv"))
+	if err != nil {
+		panic(err)
+	}
+	defer misfile.Close()
+	misWriter := csv.NewWriter(misfile)
+	defer misWriter.Flush()
+	// 建图时间，分组时间，建图分组总时间，执行时间，总时间
+	err = misWriter.Write([]string{"BlockNum", "TxNum", "graph", "group", "graph+group", "execute", "total"})
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("test start")
+	for i := 0; i < 10; i++ {
+		blockNum := blockNum + uint64(i)
+		fmt.Println("blockNum:", blockNum)
+		txsNum, graphTime, groupTime, graphGroupTime, executeTime, totalTime, _ := MISExec(blockReader, ctx, dbTx, blockNum)
+		err = misWriter.Write([]string{fmt.Sprint(blockNum), fmt.Sprint(txsNum), fmt.Sprint(graphTime), fmt.Sprint(groupTime), fmt.Sprint(graphGroupTime), fmt.Sprint(executeTime), fmt.Sprint(totalTime)})
+		if err != nil {
+			panic(err)
+		}
+	}
+	return nil
+}
+
+func MISExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.Tx, blockNum uint64) (int, int64, int64, int64, int64, int64, error) {
+	fmt.Println("MIS Execution")
+	block, header := GetBlockAndHeader(blockReader, ctx, dbTx, blockNum)
+	blkCtx := GetBlockContext(blockReader, block, dbTx, header)
+	ibs := GetState(params.MainnetChainConfig, dbTx, blockNum)
+
+	txs, predictRwSets, rwAccessedBy := GetTxsAndPredicts(blockReader, ctx, dbTx, blockNum)
+	trueRwSets, err := TrueRWSets(blockReader, ctx, dbTx, blockNum)
+	if err != nil {
+		return 0, 0, 0, 0, 0, 0, err
+	}
+
+	// 用预测的和真实的rwsets来预取数据构建并发statedb
+	scatterState := interactState.NewScatterState()
+	scatterState.Prefetch(ibs, predictRwSets)
+	scatterState.Prefetch(ibs, trueRwSets)
+
+	antsPool, _ := ants.NewPool(16, ants.WithPreAlloc(true))
+	defer antsPool.Release()
+	var antsWG sync.WaitGroup
+
+	// st := time.Now()
+	// groups := utils.GenerateMISGroups(txs, predictRwSets)
+	// fmt.Println("Generate TxGroups:", time.Since(st))
+	// 建图
+	graphStart := time.Now()
+	graph := GenerateUndiGraph(len(txs), rwAccessedBy)
+	graphTime := time.Since(graphStart)
+	fmt.Println("graphtime:", graphTime)
+
+	// 分组
+	groupstart := time.Now()
+	groups := SolveMISInTurn(graph)
+	groupTime := time.Since(groupstart)
+
+	createGraphTime := time.Since(graphStart)
+	fmt.Println("grouptime:", groupTime)
+
+	PureExecutionCost := time.Duration(0)
+
+	for round := 0; round < len(groups); round++ {
+		txsToExec := GenerateTxToExec(groups[round], txs)
+		execst := time.Now()
+		tracer.ExecConflictFreeTxs(antsPool, txsToExec, scatterState, header, blkCtx, &antsWG)
+		PureExecutionCost += time.Since(execst)
+		// fmt.Println("exec time:", time.Since(execst))
+	}
+
+	// execTime := time.Since(st)
+	// 总时间
+	timeSum := time.Since(graphStart)
+
+	// 返回建图时间，分组时间，建图分组总时间，执行时间，多轮时间，总时间
+	return len(txs), int64(graphTime.Microseconds()), int64(groupTime.Microseconds()), int64(createGraphTime.Microseconds()), int64(PureExecutionCost.Microseconds()), int64(timeSum.Microseconds()), nil
+}
+
+func DAGTest(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.Tx, blockNum uint64) error {
+	dagfile, err := os.Create(("dag.csv"))
+	if err != nil {
+		panic(err)
+	}
+	defer dagfile.Close()
+	dagWriter := csv.NewWriter(dagfile)
+	defer dagWriter.Flush()
+	// 建图时间，分组时间，建图分组总时间, 执行时间，总时间
+	err = dagWriter.Write([]string{"BlockNum", "TxNum", "graph", "group", "graph+group", "execute", "total"})
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("test start")
+	for i := 0; i < 10; i++ {
+		blockNum := blockNum + uint64(i)
+		fmt.Println("blockNum:", blockNum)
+		// testfunc.CCTest1(txs, predictRWSet, header, fakeChainCtx, state)
+		txsNum, graphTime, groupTime, graphGroupTime, executeTime, totalTime, _ := DAGExec(blockReader, ctx, dbTx, blockNum)
+		err = dagWriter.Write([]string{fmt.Sprint(blockNum), fmt.Sprint(txsNum), fmt.Sprint(graphTime), fmt.Sprint(groupTime), fmt.Sprint(graphGroupTime), fmt.Sprint(executeTime), fmt.Sprint(totalTime)})
+		if err != nil {
+			panic(err)
+		}
+	}
+	return nil
+}
+
+func DAGExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.Tx, blockNum uint64) (int, int64, int64, int64, int64, int64, error) {
+	fmt.Println("DegreeZero Solution  Execution")
+	block, header := GetBlockAndHeader(blockReader, ctx, dbTx, blockNum)
+	blkCtx := GetBlockContext(blockReader, block, dbTx, header)
+	ibs := GetState(params.MainnetChainConfig, dbTx, blockNum)
+
+	txs, predictRwSets, rwAccessedBy := GetTxsAndPredicts(blockReader, ctx, dbTx, blockNum)
+	trueRwSets, err := TrueRWSets(blockReader, ctx, dbTx, blockNum)
+	if err != nil {
+		return 0, 0, 0, 0, 0, 0, err
+	}
+
+	// 用预测的和真实的rwsets来预取数据构建并发statedb
+	scatterState := interactState.NewScatterState()
+	scatterState.Prefetch(ibs, predictRwSets)
+	scatterState.Prefetch(ibs, trueRwSets)
+
+	antsPool, _ := ants.NewPool(16, ants.WithPreAlloc(true))
+	defer antsPool.Release()
+	var antsWG sync.WaitGroup
+
+	// 建图
+	graphStart := time.Now()
+	graph := GenerateDiGraph(len(txs), rwAccessedBy)
+	fmt.Println(len(graph.Vertices))
+	fmt.Println(len(graph.AdjacencyMap))
+	graphTime := time.Since(graphStart)
+	fmt.Println("graphtime:", graphTime)
+
+	// 分组
+	groupstart := time.Now()
+	groups := graph.GetTopo()
+	groupTime := time.Since(groupstart)
+	fmt.Println("group len:", len(groups[0]))
+	createGraphTime := time.Since(graphStart)
+	fmt.Println("grouptime:", groupTime)
+
+	PureExecutionCost := time.Duration(0)
+
+	for round := 0; round < len(groups); round++ {
+		txsToExec := GenerateTxToExec(groups[round], txs)
+		execst := time.Now()
+		tracer.ExecConflictFreeTxs(antsPool, txsToExec, scatterState, header, blkCtx, &antsWG)
+		PureExecutionCost += time.Since(execst)
+	}
+	fmt.Println("exec time:", PureExecutionCost)
+	// 总时间
+	timeSum := time.Since(graphStart)
+
+	// 返回建图时间，分组时间，建图分组总时间，执行时间，多轮时间，总时间
+	return len(txs), int64(graphTime.Microseconds()), int64(groupTime.Microseconds()), int64(createGraphTime.Microseconds()), int64(PureExecutionCost.Microseconds()), int64(timeSum.Microseconds()), nil
+}
+
+func GriaExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.Tx, blockNum uint64, workerNum int) {
+	fmt.Println("Gria Execution")
+	block, header := GetBlockAndHeader(blockReader, ctx, dbTx, blockNum)
+	blkCtx := GetBlockContext(blockReader, block, dbTx, header)
+	ibs := GetState(params.MainnetChainConfig, dbTx, blockNum)
+
+	txs, predictRwSets, _ := GetTxsAndPredicts(blockReader, ctx, dbTx, blockNum)
+	trueRwSets, err := TrueRWSets(blockReader, ctx, dbTx, blockNum)
+	if err != nil {
+		// return 0, 0, 0, 0, 0, 0, err
+		return
+	}
+
+	// 用预测的和真实的rwsets来预取数据构建并发statedb
+	scatterState := interactState.NewScatterState()
+	scatterState.Prefetch(ibs, predictRwSets)
+	scatterState.Prefetch(ibs, trueRwSets)
+
+	// 初始化全局版本链
+	gvc := interactState.NewGlobalVersionChain()
+
+	st := time.Now()
+	// 为每个Processor制作状态代理
+	states := make([]*interactState.StateForGria, workerNum)
+	for i := 0; i < workerNum; i++ {
+		states[i] = interactState.NewStateForGria(scatterState, gvc)
+	}
+
+	// 贪心分组
+	txGroups := gria.GreedyGrouping(txs, workerNum)
+
+	// 制作Processor
+	GriaProcessor := make([]*GriaGroupWrapper, workerNum)
+	for i := 0; i < workerNum; i++ {
+		GriaProcessor[i] = NewGriaGroupWrapper(states[i], txGroups[i], header, blkCtx)
+	}
+
+	// 执行Tx
+	wg := sync.WaitGroup{}
+	for i := 0; i < workerNum; i++ {
+		wg.Add(1)
+		go GriaProcessor[i].ProcessTxs(&wg)
+	}
+	wg.Wait()
+
+	// 提交Tx
+	for i := 0; i < workerNum; i++ {
+		wg.Add(1)
+		go GriaProcessor[i].CommitTxs(&wg)
+	}
+	wg.Wait()
+	sum := 0
+	for i := 0; i < workerNum; i++ {
+		sum += GriaProcessor[i].GetAbortNum()
+	}
+	fmt.Println("Aborted before rechecking:", sum)
+
+	for i := 0; i < workerNum; i++ {
+		wg.Add(1)
+		go GriaProcessor[i].RecheckTxs(&wg)
+	}
+	wg.Wait()
+	sum = 0
+	for i := 0; i < workerNum; i++ {
+		sum += GriaProcessor[i].GetAbortNum()
+	}
+	fmt.Println("Aborted after rechecking:", sum)
+
+	fmt.Println("Gria Execution Time:", time.Since(st))
 }

@@ -1,21 +1,19 @@
 package main
 
 import (
-	"erigonInteract/gria"
 	"erigonInteract/utils"
-	"fmt"
 )
 
 func main() {
-	ctx, dbTx, blockReader := utils.PrepareEnv()
+	// ctx, dbTx, blockReader := utils.PrepareEnv()
 
-	blk, header := utils.GetBlockAndHeader(blockReader, ctx, dbTx, 18999998)
+	// blk, header := utils.GetBlockAndHeader(blockReader, ctx, dbTx, 18999998)
 
-	fmt.Println("Block", blk.Hash(), "Header", header.Hash())
+	// fmt.Println("Block", blk.Hash(), "Header", header.Hash())
 
-	txs := blk.Transactions()
+	// txs := blk.Transactions()
 
-	gria.GreedyGrouping(txs, 4)
+	// gria.GreedyGrouping(txs, 4)
 
 	// // stateReader
 	// // pls := state.NewPlainState(dbTx, 18999999, systemcontracts.SystemContractCodeLookup[chainConfig.ChainName])
@@ -57,7 +55,13 @@ func main() {
 	// }
 	// log.Info("Execution time", "time", time.Since(st))
 
-	// ctx, dbTx, blockReader := utils.PrepareEnv()
+	ctx, dbTx, blockReader := utils.PrepareEnv()
 	// utils.SerialTest(blockReader, ctx, dbTx, 18999999-10000)
+	// utils.SerialExec(blockReader, ctx, dbTx, 18999999-10000)
 	// utils.CCTest(blockReader, ctx, dbTx, 18999999-10000)
+	utils.CCExec(blockReader, ctx, dbTx, 18999999-10000)
+	// utils.MISTest(blockReader, ctx, dbTx, 18999999-10000)
+	// utils.DAGTest(blockReader, ctx, dbTx, 18999999-10000)
+	// utils.DAGExec(blockReader, ctx, dbTx, 18999999-10000)
+	// utils.GriaExec(blockReader, ctx, dbTx, 18999999-10000, 4)
 }

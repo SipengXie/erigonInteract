@@ -57,6 +57,10 @@ func TestSolveMIS(t *testing.T) {
 	// graphBytes, _ := os.ReadFile("../graph.json")
 	// var graph = &conflictgraph.UndirectedGraph{}
 	// json.Unmarshal(graphBytes, graph)
+	// a := uint256.NewInt(1)
+	// b := a
+	// a.Clear()
+	// t.Log(b)
 
 	graph := NewGraph2()
 	// solution := NewSolution(graph)

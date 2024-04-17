@@ -70,6 +70,9 @@ func GenerateUndiGraph(vertexNum int, rwAccessedBy *accesslist.RwAccessedBy) *co
 			// 再添加所有读写冲突
 			for _, rTx := range rTxs {
 				for _, wTx := range wTxs {
+					if rTx == wTx {
+						continue
+					}
 					undiConfGraph.AddEdge(rTx, wTx)
 				}
 			}
@@ -113,6 +116,9 @@ func GenerateDiGraph(vertexNum int, rwAccessedBy *accesslist.RwAccessedBy) *conf
 			// 再添加所有读写冲突，不过有方向
 			for _, rTx := range rTxs {
 				for _, wTx := range wTxs {
+					if rTx == wTx {
+						continue
+					}
 					Graph.AddEdge(min(rTx, wTx), max(rTx, wTx))
 				}
 			}

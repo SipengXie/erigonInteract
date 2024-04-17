@@ -44,3 +44,11 @@ func GetTxsAndPredicts(blockReader *freezeblocks.BlockReader, ctx context.Contex
 	}
 	return txs, predictRwSets, rwAccessedBy
 }
+
+func GenerateTxToExec(group []uint, txs types.Transactions) types.Transactions {
+	txsToExec := make(types.Transactions, len(group))
+	for i := 0; i < len(group); i++ {
+		txsToExec[i] = txs[group[i]]
+	}
+	return txsToExec
+}
