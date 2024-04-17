@@ -59,9 +59,9 @@ func main() {
 	// utils.SerialTest(blockReader, ctx, dbTx, 18999999-10000)
 	// utils.SerialExec(blockReader, ctx, dbTx, 18999999-10000)
 	// utils.CCTest(blockReader, ctx, dbTx, 18999999-10000)
-	utils.CCExec(blockReader, ctx, dbTx, 18999999-10000)
+	// utils.CCExec(blockReader, ctx, dbTx, 18999999-10000)
 	// utils.MISTest(blockReader, ctx, dbTx, 18999999-10000)
 	// utils.DAGTest(blockReader, ctx, dbTx, 18999999-10000)
-	// utils.DAGExec(blockReader, ctx, dbTx, 18999999-10000)
+	utils.DAGExec(blockReader, ctx, dbTx, 18999999-10000)
 	// utils.GriaExec(blockReader, ctx, dbTx, 18999999-10000, 4)
 }

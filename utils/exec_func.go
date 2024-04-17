@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/ledgerwatch/erigon-lib/kv"
+	"github.com/ledgerwatch/erigon/core/vm"
+	"github.com/ledgerwatch/erigon/core/vm/evmtypes"
 	"github.com/ledgerwatch/erigon/params"
 	"github.com/ledgerwatch/erigon/turbo/snapshotsync/freezeblocks"
 	"github.com/panjf2000/ants/v2"
@@ -103,6 +105,7 @@ func CCExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.
 	blkCtx := GetBlockContext(blockReader, block, dbTx, header)
 	ibs := GetState(params.MainnetChainConfig, dbTx, blockNum)
 
+	// txs, predictRwSets, _ := GetTxsAndPredicts(blockReader, ctx, dbTx, blockNum)
 	txs, predictRwSets, rwAccessedBy := GetTxsAndPredicts(blockReader, ctx, dbTx, blockNum)
 	trueRwSets, err := TrueRWSets(blockReader, ctx, dbTx, blockNum)
 	if err != nil {
@@ -123,6 +126,18 @@ func CCExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.
 	var antsWG sync.WaitGroup
 	antsPool, _ := ants.NewPool(16, ants.WithPreAlloc(true))
 	defer antsPool.Release()
+
+	// antsWG.Add(2)
+	// antsPool.Submit(func() {
+	// 	tracer.ExecuteTxs(blkCtx, types.Transactions{txs[33]}, header, ibs)
+	// 	antsWG.Done()
+	// })
+	// antsPool.Submit(func() {
+	// 	tracer.ExecuteTxs(blkCtx, types.Transactions{txs[15]}, header, ibs)
+	// 	antsWG.Done()
+	// })
+	// antsWG.Wait()
+	// return 0, 0, 0, 0, 0, 0, nil
 
 	// 建图
 	// 建图分组
@@ -268,7 +283,8 @@ func DAGExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv
 	blkCtx := GetBlockContext(blockReader, block, dbTx, header)
 	ibs := GetState(params.MainnetChainConfig, dbTx, blockNum)
 
-	txs, predictRwSets, rwAccessedBy := GetTxsAndPredicts(blockReader, ctx, dbTx, blockNum)
+	txs, predictRwSets, _ := GetTxsAndPredicts(blockReader, ctx, dbTx, blockNum)
+	// txs, predictRwSets, rwAccessedBy := GetTxsAndPredicts(blockReader, ctx, dbTx, blockNum)
 	trueRwSets, err := TrueRWSets(blockReader, ctx, dbTx, blockNum)
 	if err != nil {
 		return 0, 0, 0, 0, 0, 0, err
@@ -278,41 +294,46 @@ func DAGExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv
 	scatterState := interactState.NewScatterState()
 	scatterState.Prefetch(ibs, predictRwSets)
 	scatterState.Prefetch(ibs, trueRwSets)
-
-	antsPool, _ := ants.NewPool(16, ants.WithPreAlloc(true))
-	defer antsPool.Release()
-	var antsWG sync.WaitGroup
-
-	// 建图
-	graphStart := time.Now()
-	graph := GenerateDiGraph(len(txs), rwAccessedBy)
-	fmt.Println(len(graph.Vertices))
-	fmt.Println(len(graph.AdjacencyMap))
-	graphTime := time.Since(graphStart)
-	fmt.Println("graphtime:", graphTime)
-
-	// 分组
-	groupstart := time.Now()
-	groups := graph.GetTopo()
-	groupTime := time.Since(groupstart)
-	fmt.Println("group len:", len(groups[0]))
-	createGraphTime := time.Since(graphStart)
-	fmt.Println("grouptime:", groupTime)
-
-	PureExecutionCost := time.Duration(0)
-
-	for round := 0; round < len(groups); round++ {
-		txsToExec := GenerateTxToExec(groups[round], txs)
-		execst := time.Now()
-		tracer.ExecConflictFreeTxs(antsPool, txsToExec, scatterState, header, blkCtx, &antsWG)
-		PureExecutionCost += time.Since(execst)
+	scatterState.Equal(ibs, trueRwSets)
+	fmt.Println("----------------------------------------")
+	scatterEvm := vm.NewEVM(blkCtx, evmtypes.TxContext{}, scatterState, params.MainnetChainConfig, vm.Config{})
+	res, _ := tracer.ExecuteTx(scatterState, txs[5], header, scatterEvm)
+	if res.Err != nil {
+		fmt.Println("Error executing transaction in VM layer:", res.Err)
 	}
-	fmt.Println("exec time:", PureExecutionCost)
-	// 总时间
-	timeSum := time.Since(graphStart)
+	// tracer.ExecuteTxs(blkCtx, txs, header, scatterState)
+	return 0, 0, 0, 0, 0, 0, nil
+	// antsPool, _ := ants.NewPool(16, ants.WithPreAlloc(true))
+	// defer antsPool.Release()
+	// var antsWG sync.WaitGroup
 
-	// 返回建图时间，分组时间，建图分组总时间，执行时间，多轮时间，总时间
-	return len(txs), int64(graphTime.Microseconds()), int64(groupTime.Microseconds()), int64(createGraphTime.Microseconds()), int64(PureExecutionCost.Microseconds()), int64(timeSum.Microseconds()), nil
+	// // 建图
+	// graphStart := time.Now()
+	// graph := GenerateDiGraph(len(txs), rwAccessedBy)
+	// graphTime := time.Since(graphStart)
+	// fmt.Println("graphtime:", graphTime)
+
+	// // 分组
+	// groupstart := time.Now()
+	// groups := graph.GetTopo()
+	// groupTime := time.Since(groupstart)
+	// createGraphTime := time.Since(graphStart)
+	// fmt.Println("grouptime:", groupTime)
+
+	// PureExecutionCost := time.Duration(0)
+
+	// for round := 0; round < len(groups); round++ {
+	// 	txsToExec := GenerateTxToExec(groups[round], txs)
+	// 	execst := time.Now()
+	// 	tracer.ExecConflictFreeTxs(antsPool, txsToExec, scatterState, header, blkCtx, &antsWG)
+	// 	PureExecutionCost += time.Since(execst)
+	// }
+	// fmt.Println("exec time:", PureExecutionCost)
+	// // 总时间
+	// timeSum := time.Since(graphStart)
+
+	// // 返回建图时间，分组时间，建图分组总时间，执行时间，多轮时间，总时间
+	// return len(txs), int64(graphTime.Microseconds()), int64(groupTime.Microseconds()), int64(createGraphTime.Microseconds()), int64(PureExecutionCost.Microseconds()), int64(timeSum.Microseconds()), nil
 }
 
 func GriaExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.Tx, blockNum uint64, workerNum int) {

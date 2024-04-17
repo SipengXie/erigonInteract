@@ -20,7 +20,7 @@ func PredictRWSets(blkCtx evmtypes.BlockContext, header *types.Header, dbTx kv.T
 	ibs := GetState(params.MainnetChainConfig, dbTx, blockNum)
 	fulldb := interactState.NewStateWithRwSets(ibs)
 
-	list, err := tracer.ExecToGenerateRWSet(fulldb, tx, header, blkCtx)
+	list, _, err := tracer.ExecToGenerateRWSet(fulldb, tx, header, blkCtx)
 	if err != nil {
 		// fmt.Println(err)
 		fmt.Println("NIL tx hash:", tx.Hash())

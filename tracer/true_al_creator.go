@@ -3,24 +3,26 @@ package tracer
 import (
 	"erigonInteract/accesslist"
 	"erigonInteract/state"
+	"fmt"
 
+	"github.com/ledgerwatch/erigon/core"
 	"github.com/ledgerwatch/erigon/core/types"
 	"github.com/ledgerwatch/erigon/core/vm"
 	"github.com/ledgerwatch/erigon/core/vm/evmtypes"
 	"github.com/ledgerwatch/erigon/params"
 )
 
-func ExecToGenerateRWSet(fulldb *state.StateWithRwSets, tx types.Transaction, header *types.Header, blkCtx evmtypes.BlockContext) (*accesslist.RWSet, error) {
+func ExecToGenerateRWSet(fulldb *state.StateWithRwSets, tx types.Transaction, header *types.Header, blkCtx evmtypes.BlockContext) (*accesslist.RWSet, *core.ExecutionResult, error) {
 	rwSet := accesslist.NewRWSet()
 	fulldb.SetRWSet(rwSet)
 
 	// evm := vm.NewEVM(core.NewEVMBlockContext(header, chainCtx, &header.Coinbase), vm.TxContext{}, fulldb, params.MainnetChainConfig, vm.Config{})
 	evm := vm.NewEVM(blkCtx, evmtypes.TxContext{}, fulldb, params.MainnetChainConfig, vm.Config{})
-	err := ExecuteTx(fulldb, tx, header, evm)
+	res, err := ExecuteTx(fulldb, tx, header, evm)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return rwSet, nil
+	return rwSet, res, nil
 }
 
 // 只服务于True AceessList 不需要返回accessedBy
@@ -29,7 +31,12 @@ func CreateRWSetsWithTransactions(fulldb *state.StateWithRwSets, blkCtx evmtypes
 	err := make([]error, len(txs))
 
 	for i, tx := range txs {
-		ret[i], err[i] = ExecToGenerateRWSet(fulldb, tx, header, blkCtx)
+		rws, res, e := ExecToGenerateRWSet(fulldb, tx, header, blkCtx)
+		ret[i] = rws
+		err[i] = e
+		if res.Err != nil {
+			fmt.Println("Error executing transaction in VM layer:", res.Err, "tid:", i)
+		}
 	}
 	return ret, err
 }

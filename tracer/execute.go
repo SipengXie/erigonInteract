@@ -13,11 +13,11 @@ import (
 )
 
 // This function execute without generating tracer.list
-func ExecuteTx(ibs evmtypes.IntraBlockState, tx types.Transaction, header *types.Header, evm *vm.EVM) error {
+func ExecuteTx(ibs evmtypes.IntraBlockState, tx types.Transaction, header *types.Header, evm *vm.EVM) (*core.ExecutionResult, error) {
 	msg, err := tx.AsMessage(*types.LatestSigner(params.MainnetChainConfig), header.BaseFee, evm.ChainRules())
 	if err != nil {
 		// This error means the transaction is invalid and should be discarded
-		return err
+		return nil, err
 	}
 
 	// txContext := core.NewEVMTxContext(msg)
@@ -28,20 +28,8 @@ func ExecuteTx(ibs evmtypes.IntraBlockState, tx types.Transaction, header *types
 	txCtx := core.NewEVMTxContext(msg)
 	evm.TxContext = txCtx
 
-	res, err := core.ApplyMessage(evm, msg, new(core.GasPool).AddGas(header.GasLimit), true /* refunds */, false /* gasBailout */)
+	return core.ApplyMessage(evm, msg, new(core.GasPool).AddGas(header.GasLimit), true /* refunds */, false /* gasBailout */)
 
-	if err != nil {
-		// This error means the Execution phase failed and the transaction has been reverted
-		// fmt.Println("Error in ExecTx", err)
-		return err
-	}
-
-	if res.Err != nil {
-		fmt.Println("Error in EVM", res.Err)
-		fmt.Println("TxHash:", tx.Hash().String())
-	}
-
-	return nil
 }
 
 // ExecuteTxs a batch of transactions in a single atomic state transition.
@@ -50,7 +38,16 @@ func ExecuteTxs(blkCtx evmtypes.BlockContext, txs types.Transactions, header *ty
 	errs := make([]error, len(txs))
 	for i, tx := range txs {
 		// ExecBasedOnRWSets includes the snapshot logic
-		errs[i] = ExecuteTx(ibs, tx, header, evm)
+		if i == 5 {
+			fmt.Println("Pause")
+		}
+		res, err := ExecuteTx(ibs, tx, header, evm)
+		if err != nil {
+			fmt.Println("Error executing transaction:", err, "tid:", i)
+		} else if res.Err != nil {
+			fmt.Println("Error executing transaction in VM layer:", res.Err, "tid:", i)
+		}
+		errs[i] = err
 	}
 	return errs
 }
@@ -84,10 +81,8 @@ func ExecConflictFreeTxs(pool *ants.Pool, txs types.Transactions, ibs evmtypes.I
 		evm := vm.NewEVM(blkCtx, evmtypes.TxContext{}, ibs, params.MainnetChainConfig, vm.Config{})
 		// Submit tasks to the ants pool
 		err := pool.Submit(func() {
-			errs[taskNum] = ExecuteTx(ibs, txs[taskNum], header, evm)
-			if errs[taskNum] != nil {
-				fmt.Println("Error executing transaction:", errs[taskNum])
-			}
+			_, err := ExecuteTx(ibs, txs[taskNum], header, evm)
+			errs[taskNum] = err
 			wg.Done() // Mark the task as completed
 		})
 		if err != nil {

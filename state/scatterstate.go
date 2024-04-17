@@ -2,6 +2,7 @@ package state
 
 import (
 	"erigonInteract/accesslist"
+	"fmt"
 	"math/big"
 	"sync"
 
@@ -9,9 +10,9 @@ import (
 	"github.com/ledgerwatch/erigon-lib/chain"
 	"github.com/ledgerwatch/erigon-lib/common"
 	types2 "github.com/ledgerwatch/erigon-lib/types"
-	"github.com/ledgerwatch/erigon/common/u256"
 	"github.com/ledgerwatch/erigon/core/types"
 	"github.com/ledgerwatch/erigon/core/vm/evmtypes"
+	"github.com/ledgerwatch/erigon/crypto"
 )
 
 // 不完整的逻辑，也没有存储storageRoots
@@ -72,7 +73,7 @@ func (s *ScatterState) AddBalance(addr common.Address, value *uint256.Int) {
 func (s *ScatterState) GetBalance(addr common.Address) *uint256.Int {
 	balance, exists := s.Balances.Load(addr)
 	if !exists {
-		return u256.Num0
+		return uint256.NewInt(0)
 	}
 	return balance.(*uint256.Int)
 }
@@ -107,6 +108,7 @@ func (s *ScatterState) GetCode(addr common.Address) []byte {
 
 func (s *ScatterState) SetCode(addr common.Address, code []byte) {
 	s.Codes.Store(addr, code)
+	s.CodeHashes.Store(addr, crypto.Keccak256Hash(code))
 }
 
 func (s *ScatterState) GetCodeSize(addr common.Address) int {
@@ -145,6 +147,7 @@ func (s *ScatterState) GetState(addr common.Address, key *common.Hash, value *ui
 	res, exists := storage.Load(*key)
 	if exists {
 		*value = res.(uint256.Int)
+		return
 	}
 	value.Clear()
 }
@@ -162,9 +165,9 @@ func (s *ScatterState) SetState(addr common.Address, key *common.Hash, value uin
 }
 
 func (s *ScatterState) GetTransientState(addr common.Address, key common.Hash) uint256.Int {
-	var value uint256.Int
-	s.GetState(addr, &key, &value)
-	return value
+	value := uint256.NewInt(0)
+	s.GetState(addr, &key, value)
+	return *value
 }
 
 func (s *ScatterState) SetTransientState(addr common.Address, key common.Hash, value uint256.Int) {
@@ -257,7 +260,8 @@ func (s *ScatterState) AddPreimage(_ common.Hash, _ []byte) {
 }
 
 func (s *ScatterState) SetBalance(addr common.Address, value *uint256.Int) {
-	s.Balances.Store(addr, value)
+	newVal := new(uint256.Int).Set(value)
+	s.Balances.Store(addr, newVal)
 }
 
 func (s *ScatterState) SetTxContext(_ common.Hash, _ int) {
@@ -285,7 +289,8 @@ func (s *ScatterState) prefetch(addr common.Address, hash common.Hash, statedb e
 	}
 	switch hash {
 	case accesslist.BALANCE:
-		s.SetBalance(addr, statedb.GetBalance(addr))
+		balance := statedb.GetBalance(addr)
+		s.SetBalance(addr, balance)
 	case accesslist.NONCE:
 		s.SetNonce(addr, statedb.GetNonce(addr))
 	case accesslist.CODEHASH:
@@ -293,10 +298,63 @@ func (s *ScatterState) prefetch(addr common.Address, hash common.Hash, statedb e
 	case accesslist.CODE:
 		s.SetCode(addr, statedb.GetCode(addr))
 	case accesslist.ALIVE:
-		// s.SetAlive(addr, statedb.Exist(addr))
+		s.Alive.Store(addr, statedb.Exist(addr))
 	default:
-		var value uint256.Int
-		statedb.GetState(addr, &hash, &value)
-		s.SetState(addr, &hash, value)
+		value := uint256.NewInt(0)
+		statedb.GetState(addr, &hash, value)
+		s.SetState(addr, &hash, *value)
+	}
+}
+
+func (s *ScatterState) Equal(statedb evmtypes.IntraBlockState, rwSets accesslist.RWSetList) {
+	for _, rwSet := range rwSets {
+		for addr, State := range rwSet.ReadSet {
+			for hash := range State {
+				s.equal(addr, hash, statedb)
+			}
+		}
+		for addr, State := range rwSet.WriteSet {
+			for hash := range State {
+				s.equal(addr, hash, statedb)
+			}
+		}
+	}
+}
+
+func (s *ScatterState) equal(addr common.Address, hash common.Hash, statedb evmtypes.IntraBlockState) {
+	switch hash {
+	case accesslist.BALANCE:
+		balance := statedb.GetBalance(addr)
+		if !s.GetBalance(addr).Eq(balance) {
+			panic(fmt.Sprintf("Balance mismatch: %s %s %s", addr.Hex(), s.GetBalance(addr).String(), balance.String()))
+		}
+	case accesslist.NONCE:
+		nonce := statedb.GetNonce(addr)
+		if s.GetNonce(addr) != nonce {
+			panic(fmt.Sprintf("Nonce mismatch: %s %d %d", addr.Hex(), s.GetNonce(addr), nonce))
+		}
+	case accesslist.CODEHASH:
+		codeHash := statedb.GetCodeHash(addr)
+		if s.GetCodeHash(addr) != codeHash {
+			panic(fmt.Sprintf("CodeHash mismatch: %s %s %s", addr.Hex(), s.GetCodeHash(addr).Hex(), codeHash.Hex()))
+		}
+	case accesslist.CODE:
+		code := statedb.GetCode(addr)
+		if string(s.GetCode(addr)) != string(code) {
+			panic(fmt.Sprintf("Code mismatch: %s %s %s", addr.Hex(), s.GetCode(addr), code))
+		}
+	case accesslist.ALIVE:
+		isDead := statedb.HasSelfdestructed(addr)
+		if s.HasSelfdestructed(addr) != isDead {
+			panic(fmt.Sprintf("Alive mismatch: %s %t %t", addr.Hex(), !s.HasSelfdestructed(addr), isDead))
+		}
+	default:
+		value := uint256.NewInt(0)
+		statedb.GetState(addr, &hash, value)
+		value2 := uint256.NewInt(0)
+		s.GetState(addr, &hash, value2)
+		if !value.Eq(value2) {
+			panic(fmt.Sprintf("State mismatch: %s %s %s", addr.Hex(), value.String(), value2.String()))
+		}
 	}
 }
