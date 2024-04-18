@@ -88,7 +88,7 @@ func BlockPilot(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx
 
 func ExecuteTx(tx types.Transaction, ibs *state.IntraBlockState, header *types.Header, blkCtx evmtypes.BlockContext) (*accesslist.RWSet, error) {
 	fulldb := interactState.NewStateWithRwSets(ibs)
-	rws, err := tracer.ExecToGenerateRWSet(fulldb, tx, header, blkCtx)
+	rws, _, err := tracer.ExecToGenerateRWSet(fulldb, tx, header, blkCtx)
 	if err != nil {
 		return nil, err
 	}

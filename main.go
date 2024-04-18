@@ -1,6 +1,7 @@
 package main
 
 import (
+	"erigonInteract/schedule"
 	"erigonInteract/utils"
 )
 
@@ -62,6 +63,11 @@ func main() {
 	// utils.CCExec(blockReader, ctx, dbTx, 18999999-10000)
 	// utils.MISTest(blockReader, ctx, dbTx, 18999999-10000)
 	// utils.DAGTest(blockReader, ctx, dbTx, 18999999-10000)
-	utils.DAGExec(blockReader, ctx, dbTx, 18999999-10000)
+	// utils.DAGExec(blockReader, ctx, dbTx, 18999999-10000)
 	// utils.GriaExec(blockReader, ctx, dbTx, 18999999-10000, 4)
+
+	// utils.SerialTest1(blockReader, ctx, dbTx, 18999999-10000)
+
+	pe := schedule.NewPipeLineExecutor()
+	pe.PipeLineExec(blockReader, ctx, dbTx, 18999999-10000)
 }

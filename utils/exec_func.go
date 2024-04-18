@@ -32,7 +32,7 @@ func SerialTest(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx
 	}
 
 	// serial execution
-	for i := 0; i < 10000; i++ {
+	for i := 0; i < 10; i++ {
 		blockNum := startBlockNum + uint64(i)
 		fmt.Println("blockNum:", blockNum)
 		serialTime, txsNum, _ := SerialExec(blockReader, ctx, dbTx, blockNum)
@@ -41,6 +41,19 @@ func SerialTest(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx
 			panic(err)
 		}
 	}
+}
+
+// test total time
+func SerialTest1(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.Tx, startBlockNum uint64) {
+	// serial execution
+	st := time.Now()
+	for i := 0; i < 10; i++ {
+		blockNum := startBlockNum + uint64(i)
+		fmt.Println("blockNum:", blockNum)
+		SerialExec(blockReader, ctx, dbTx, blockNum)
+	}
+	totalTime := time.Since(st)
+	fmt.Println("Serial exec 1000 blocks total time:", int64(totalTime.Microseconds()))
 }
 
 // 串行执行
@@ -297,10 +310,16 @@ func DAGExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv
 
 	// !! 这一串注释用于执行单个交易
 	// scatterEvm := vm.NewEVM(blkCtx, evmtypes.TxContext{}, scatterState, params.MainnetChainConfig, vm.Config{})
+	// st := time.Now()
+	// for i := 0; i < len(txs); i++ {
+	// 	txs[i].AsMessage(*types.LatestSigner(params.MainnetChainConfig), header.BaseFee, scatterEvm.ChainRules())
+	// }
+	// fmt.Println("AsMessage Time:", time.Since(st))
 	// res, _ := tracer.ExecuteTx(scatterState, txs[5], header, scatterEvm)
 	// if res.Err != nil {
 	// 	fmt.Println("Error executing transaction in VM layer:", res.Err)
 	// }
+	// return 0, 0, 0, 0, 0, 0, nil
 
 	// !! 这一串注释用于使用ScatterState串行执行
 	// st := time.Now()
