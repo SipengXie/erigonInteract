@@ -218,25 +218,25 @@ func (s *ScatterState) Empty(addr common.Address) bool {
 }
 
 func (s *ScatterState) AddressInAccessList(addr common.Address) bool {
-	return false
+	return true
 }
 
 func (s *ScatterState) SlotInAccessList(addr common.Address, slot common.Hash) (addressOk bool, slotOk bool) {
-	return false, false
+	return true, true
 }
 
 // AddAddressToAccessList adds the given address to the access list. This operation is safe to perform
 // even if the feature/fork is not active yet
 func (s *ScatterState) AddAddressToAccessList(addr common.Address) bool {
 	// SKIP
-	return true
+	return false
 }
 
 // AddSlotToAccessList adds the given (address,slot) to the access list. This operation is safe to perform
 // even if the feature/fork is not active yet
 func (s *ScatterState) AddSlotToAccessList(addr common.Address, slot common.Hash) (bool, bool) {
 	// SKIP
-	return true, true
+	return false, false
 }
 
 func (s *ScatterState) Prepare(rules *chain.Rules, sender common.Address, coinbase common.Address, dest *common.Address, precompiles []common.Address, txAccesses types2.AccessList) {

@@ -16,11 +16,11 @@ import (
 	"github.com/ledgerwatch/erigon/params"
 )
 
-func (w *GriaGroupWrapper) processTx(tx types.Transaction, tid int, header *types.Header, evm *vm.EVM) error {
+func (w *GriaGroupWrapper) processTx(tx types.Transaction, tid int, header *types.Header, evm *vm.EVM) (*core.ExecutionResult, error) {
 	msg, err := tx.AsMessage(*types.LatestSigner(params.MainnetChainConfig), header.BaseFee, evm.ChainRules())
 	if err != nil {
 		// This error means the transaction is invalid and should be discarded
-		return err
+		return nil, err
 	}
 
 	// txContext := core.NewEVMTxContext(msg)
@@ -33,20 +33,17 @@ func (w *GriaGroupWrapper) processTx(tx types.Transaction, tid int, header *type
 	w.state.SetTxContext(common.Hash{}, tid)
 
 	// snapshot := ibs.Snapshot()
+	// !! 实际上这里应该有两个层次的Revert，合约层次与EOA层次，在StateForGria中，revert只是修改LocalWrite，实际上是可以做到正确的Revert逻辑的
+	// !! 但我们先忽略这一点
 	res, err := core.ApplyMessage(evm, msg, new(core.GasPool).AddGas(header.GasLimit), true /* refunds */, false /* gasBailout */)
 	// _, err = core.ApplyMessage(evm, msg, new(core.GasPool).AddGas(msg.GasLimit))
 	if err != nil {
-		// This error means the Execution phase failed and the transaction has been reverted
-		fmt.Println("Error in processTx", err)
-		return err
-	}
-	if res.Err != nil {
-		fmt.Println("Error in EVM", res.Err)
+		return nil, err
 	}
 
 	// insert versions to the global version chain
 	w.state.Commit()
-	return nil
+	return res, err
 
 }
 
@@ -146,7 +143,14 @@ func (w *GriaGroupWrapper) ProcessTxs(wait *sync.WaitGroup) {
 	rvs := make(map[int]*state.MapVersion)
 	wvs := make(map[int]*state.MapVersion)
 	for _, txWithIndex := range w.txs {
-		w.processTx(txWithIndex.Tx, txWithIndex.Tid, w.header, evm)
+		res, err := w.processTx(txWithIndex.Tx, txWithIndex.Tid, w.header, evm)
+		if err != nil {
+			fmt.Println("Fatal error:", err)
+			continue
+		}
+		if res.Err != nil {
+			fmt.Println("Error executing transaction in VM layer:", res.Err, "tid:", txWithIndex.Tid)
+		}
 		rvs[txWithIndex.Tid] = w.state.GetReadSet()
 		wvs[txWithIndex.Tid] = w.state.GetWriteSet()
 	}
