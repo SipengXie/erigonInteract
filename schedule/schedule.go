@@ -87,7 +87,7 @@ func (pe *PipeLineExecutor) PipeLineExecLoop(wg *sync.WaitGroup) error {
 
 }
 
-func (pe *PipeLineExecutor) PipeLineExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.Tx, blockNum uint64) error {
+func (pe *PipeLineExecutor) PipeLineExec(blockReader *freezeblocks.BlockReader, ctx context.Context, db kv.RoDB, blockNum uint64) error {
 
 	consoleHandler := log.LvlFilterHandler(log.LvlInfo, log.StdoutHandler)
 	log.Root().SetHandler(consoleHandler)
@@ -96,13 +96,38 @@ func (pe *PipeLineExecutor) PipeLineExec(blockReader *freezeblocks.BlockReader, 
 	wg.Add(1)
 	go pe.PipeLineExecLoop(&wg)
 
-	for i := blockNum; i < blockNum+1000; i++ {
+	for i := blockNum; i < blockNum+500; i++ {
 		// 1. getTransacion (seq )
-		block, header := utils.GetBlockAndHeader(blockReader, ctx, dbTx, i)
-		blkCtx := utils.GetBlockContext(blockReader, block, dbTx, header)
-		ibs := utils.GetState(params.MainnetChainConfig, dbTx, i)
-		txs, predictRwSets, rwAccessedBy := utils.GetTxsAndPredicts(blockReader, ctx, dbTx, i)
-		trueRwSets, err := utils.TrueRWSets(blockReader, ctx, dbTx, i)
+		dbTx1, err := db.BeginRo(ctx)
+		if err != nil {
+			panic(err)
+		}
+		block, header := utils.GetBlockAndHeader(blockReader, ctx, dbTx1, i)
+
+		dbTx2, err := db.BeginRo(ctx)
+		if err != nil {
+			panic(err)
+		}
+		blkCtx := utils.GetBlockContext(blockReader, block, dbTx2, header)
+
+		dbTx3, err := db.BeginRo(ctx)
+		if err != nil {
+			panic(err)
+		}
+		ibs := utils.GetState(params.MainnetChainConfig, dbTx3, i)
+
+		dbTx4, err := db.BeginRo(ctx)
+		if err != nil {
+			panic(err)
+		}
+		txs, predictRwSets, rwAccessedBy := utils.GetTxsAndPredicts(blockReader, ctx, dbTx4, i)
+
+		dbTx5, err := db.BeginRo(ctx)
+		if err != nil {
+			panic(err)
+		}
+		trueRwSets, err := utils.TrueRWSets(blockReader, ctx, dbTx5, i)
+
 		if err != nil {
 			log.Error(err.Error())
 			return err
@@ -152,12 +177,13 @@ func Schedule(txs types.Transactions, predictRwSets []*accesslist.RWSet, rwAcces
 	go DAG(txs, rwAccessedBy, &wg, resultCh)
 	// fmt.Println("MIS")
 	// go MIS(txs, rwAccessedBy, &wg, resultCh)
+	// go MIS(txs, predictRwSets, &wg, resultCh)
 
 	wg.Wait()
 	close(resultCh)
 
 	// 获取调度方案
-	fmt.Println("get result")
+	// fmt.Println("get result")
 	var minCost uint64 = math.MaxUint64
 	finalRes := new(ScheduleRes)
 	for res := range resultCh {
@@ -239,10 +265,11 @@ func DAG(txs types.Transactions, rwAccessedBy *accesslist.RwAccessedBy, wg *sync
 }
 
 // MIS 最大独立集调度估算
-func MIS(txs types.Transactions, rwAccessedBy *accesslist.RwAccessedBy, wg *sync.WaitGroup, resultCh chan<- ScheduleRes) {
+func MIS(txs types.Transactions, predictRwSets []*accesslist.RWSet, wg *sync.WaitGroup, resultCh chan<- ScheduleRes) {
 	defer wg.Done()
 	// 分组
-	groups := utils.GenerateMISGroups(txs, rwAccessedBy)
+	// groups := utils.GenerateMISGroups(txs, rwAccessedBy)
+	groups := utils.GenerateOldMISGroups(txs, predictRwSets)
 	// 获取最大cost
 	var maxCost uint64
 	maxCost = 0

@@ -14,6 +14,7 @@ import (
 	"github.com/ledgerwatch/erigon-lib/kv"
 	"github.com/ledgerwatch/erigon/params"
 	"github.com/ledgerwatch/erigon/turbo/snapshotsync/freezeblocks"
+	"github.com/ledgerwatch/log/v3"
 	"github.com/panjf2000/ants/v2"
 )
 
@@ -32,7 +33,7 @@ func SerialTest(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx
 	}
 
 	// serial execution
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 500; i++ {
 		blockNum := startBlockNum + uint64(i)
 		fmt.Println("blockNum:", blockNum)
 		serialTime, txsNum, _ := SerialExec(blockReader, ctx, dbTx, blockNum)
@@ -45,12 +46,16 @@ func SerialTest(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx
 
 // test total time
 func SerialTest1(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.Tx, startBlockNum uint64) {
+	consoleHandler := log.LvlFilterHandler(log.LvlInfo, log.StdoutHandler)
+	log.Root().SetHandler(consoleHandler)
 	// serial execution
 	st := time.Now()
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 20; i++ {
 		blockNum := startBlockNum + uint64(i)
-		fmt.Println("blockNum:", blockNum)
+		execst := time.Now()
 		SerialExec(blockReader, ctx, dbTx, blockNum)
+		executeTime := time.Since(execst)
+		log.Info("serial exec done", "blockNum", blockNum, "executeTime", executeTime)
 	}
 	totalTime := time.Since(st)
 	fmt.Println("Serial exec 1000 blocks total time:", int64(totalTime.Microseconds()))
@@ -58,7 +63,7 @@ func SerialTest1(blockReader *freezeblocks.BlockReader, ctx context.Context, dbT
 
 // 串行执行
 func SerialExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.Tx, blockNum uint64) (int64, int, error) {
-	fmt.Println("Serial Execution")
+	// fmt.Println("Serial Execution")
 	// get block and header
 	blk, header := GetBlockAndHeader(blockReader, ctx, dbTx, blockNum)
 	txs := blk.Transactions()
@@ -81,7 +86,7 @@ func SerialExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx
 func CCTest(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.Tx, blockNum uint64) error {
 	fmt.Println("ConnectedComponent Execution")
 
-	cc1file, err := os.Create(("cc1.csv"))
+	cc1file, err := os.Create(("cc.csv"))
 	if err != nil {
 		panic(err)
 	}
@@ -89,19 +94,19 @@ func CCTest(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.
 	cc1Writer := csv.NewWriter(cc1file)
 	defer cc1Writer.Flush()
 	// 建图时间，分组时间，建图分组总时间，预取时间，执行时间，合并时间，总时间
-	err = cc1Writer.Write([]string{"BlockNum", "TxNum", "graph", "group", "graph+group", "execute", "total"})
+	err = cc1Writer.Write([]string{"BlockNum", "TxNum", "graph", "group", "schedule", "scheduleCost", "execute", "total"})
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Println("test start")
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 500; i++ {
 		// txs, predictRWSet, header, fakeChainCtx := GetTxsPredictsAndHeadersForOneBlock(chainDB, sdbBackend, blockNum)
 		blockNum := blockNum + uint64(i)
 		fmt.Println("blockNum:", blockNum)
 		// testfunc.CCTest1(txs, predictRWSet, header, fakeChainCtx, state)
-		txNum, graphTime, groupTime, graphGroupTime, executeTime, totalTime, _ := CCExec(blockReader, ctx, dbTx, blockNum)
-		err = cc1Writer.Write([]string{fmt.Sprint(blockNum), fmt.Sprint(txNum), fmt.Sprint(graphTime), fmt.Sprint(groupTime), fmt.Sprint(graphGroupTime), fmt.Sprint(executeTime), fmt.Sprint(totalTime)})
+		txNum, graphTime, groupTime, scheduleTime, scheduleCost, executeTime, totalTime, _ := CCExec(blockReader, ctx, dbTx, blockNum)
+		err = cc1Writer.Write([]string{fmt.Sprint(blockNum), fmt.Sprint(txNum), fmt.Sprint(graphTime), fmt.Sprint(groupTime), fmt.Sprint(scheduleTime), fmt.Sprint(scheduleCost), fmt.Sprint(executeTime), fmt.Sprint(totalTime)})
 		if err != nil {
 			panic(err)
 		}
@@ -110,7 +115,7 @@ func CCTest(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.
 }
 
 // 连通分量执行
-func CCExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.Tx, blockNum uint64) (int, int64, int64, int64, int64, int64, error) {
+func CCExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.Tx, blockNum uint64) (int, int64, int64, int64, uint64, int64, int64, error) {
 	fmt.Println("ConnectedComponent Execution")
 	block, header := GetBlockAndHeader(blockReader, ctx, dbTx, blockNum)
 	blkCtx := GetBlockContext(blockReader, block, dbTx, header)
@@ -120,14 +125,9 @@ func CCExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.
 	txs, predictRwSets, rwAccessedBy := GetTxsAndPredicts(blockReader, ctx, dbTx, blockNum)
 	trueRwSets, err := TrueRWSets(blockReader, ctx, dbTx, blockNum)
 	if err != nil {
-		return 0, 0, 0, 0, 0, 0, err
+		return 0, 0, 0, 0, 0, 0, 0, err
 	}
-	// for i, tx := range txs {
-	// 	if tx.GetTo().String() == "0xdAC17F958D2ee523a2206206994597C13D831ec7" {
-	// 		fmt.Println("Tx:", i)
-	// 		fmt.Println("PredictRWSet:", predictRwSets[i].ToJsonStruct().ToString())
-	// 	}
-	// }
+
 	// 用预测的和真实的rwsets来预取数据构建并发statedb
 	scatterState := interactState.NewScatterState()
 	scatterState.Prefetch(ibs, predictRwSets)
@@ -159,22 +159,31 @@ func CCExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.
 
 	groupstart := time.Now()
 	// 似乎已经不需要Rwsetgroup了，因为不需要再通过分组进行预取了
-	txGroup, _ := GenerateCCGroups(vIdsGroups, txs, predictRwSets)
+	groups, _ := GenerateCCGroups(vIdsGroups, txs, predictRwSets)
 	// txGroup, RwSetGroup := utils.GenerateTxAndRWSetGroups(txs, predictRWSet)
 	groupTime := time.Since(groupstart)
 	createGraphTime := time.Since(graphStart)
 
 	// 并发执行
 	execStart := time.Now()
-	tracer.ExecConflictedTxs(antsPool, txGroup, scatterState, header, blkCtx, &antsWG)
+	tracer.ExecConflictedTxs(antsPool, groups, scatterState, header, blkCtx, &antsWG)
 	execTime := time.Since(execStart)
 
 	// 总时间
 	timeSum := time.Since(graphStart)
-
+	maxCost := uint64(0)
+	for i := 0; i < len(groups); i++ {
+		var temp uint64
+		for j := 0; j < len(groups[i]); j++ {
+			temp = temp + groups[i][j].GetGas()
+		}
+		if temp > maxCost {
+			maxCost = temp
+		}
+	}
 	// 返回建图时间，分组时间，建图分组总时间，预取时间，执行时间，合并时间，总时间
 	// return len(txs), int64(graphTime.Microseconds()), int64(groupTime.Microseconds()), int64(createGraphTime.Microseconds()), int64(prefectTime.Microseconds()), int64(execTime.Microseconds()), int64(mergeTime.Microseconds()), int64(timeSum.Microseconds()), nil
-	return len(txs), int64(graphTime.Microseconds()), int64(groupTime.Microseconds()), int64(createGraphTime.Microseconds()), int64(execTime.Microseconds()), int64(timeSum.Microseconds()), nil
+	return len(txs), int64(graphTime.Microseconds()), int64(groupTime.Microseconds()), int64(createGraphTime.Microseconds()), maxCost, int64(execTime.Microseconds()), int64(timeSum.Microseconds()), nil
 }
 
 func MISTest(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.Tx, blockNum uint64) error {
@@ -192,7 +201,7 @@ func MISTest(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv
 	}
 
 	fmt.Println("test start")
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 500; i++ {
 		blockNum := blockNum + uint64(i)
 		fmt.Println("blockNum:", blockNum)
 		txsNum, graphTime, groupTime, graphGroupTime, executeTime, totalTime, _ := MISExec(blockReader, ctx, dbTx, blockNum)
@@ -269,18 +278,18 @@ func DAGTest(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv
 	dagWriter := csv.NewWriter(dagfile)
 	defer dagWriter.Flush()
 	// 建图时间，分组时间，建图分组总时间, 执行时间，总时间
-	err = dagWriter.Write([]string{"BlockNum", "TxNum", "graph", "group", "graph+group", "execute", "total"})
+	err = dagWriter.Write([]string{"BlockNum", "TxNum", "graph", "group", "schedule", "scheduleCost", "execute", "total"})
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Println("test start")
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 500; i++ {
 		blockNum := blockNum + uint64(i)
 		fmt.Println("blockNum:", blockNum)
 		// testfunc.CCTest1(txs, predictRWSet, header, fakeChainCtx, state)
-		txsNum, graphTime, groupTime, graphGroupTime, executeTime, totalTime, _ := DAGExec(blockReader, ctx, dbTx, blockNum)
-		err = dagWriter.Write([]string{fmt.Sprint(blockNum), fmt.Sprint(txsNum), fmt.Sprint(graphTime), fmt.Sprint(groupTime), fmt.Sprint(graphGroupTime), fmt.Sprint(executeTime), fmt.Sprint(totalTime)})
+		txsNum, graphTime, groupTime, scheduleTime, scheduleCost, executeTime, totalTime, _ := DAGExec(blockReader, ctx, dbTx, blockNum)
+		err = dagWriter.Write([]string{fmt.Sprint(blockNum), fmt.Sprint(txsNum), fmt.Sprint(graphTime), fmt.Sprint(groupTime), fmt.Sprint(scheduleTime), fmt.Sprint(scheduleCost), fmt.Sprint(executeTime), fmt.Sprint(totalTime)})
 		if err != nil {
 			panic(err)
 		}
@@ -288,7 +297,7 @@ func DAGTest(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv
 	return nil
 }
 
-func DAGExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.Tx, blockNum uint64) (int, int64, int64, int64, int64, int64, error) {
+func DAGExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.Tx, blockNum uint64) (int, int64, int64, int64, uint64, int64, int64, error) {
 	fmt.Println("DegreeZero Solution  Execution")
 	block, header := GetBlockAndHeader(blockReader, ctx, dbTx, blockNum)
 	blkCtx := GetBlockContext(blockReader, block, dbTx, header)
@@ -298,14 +307,14 @@ func DAGExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv
 	txs, predictRwSets, rwAccessedBy := GetTxsAndPredicts(blockReader, ctx, dbTx, blockNum)
 	trueRwSets, err := TrueRWSets(blockReader, ctx, dbTx, blockNum)
 	if err != nil {
-		return 0, 0, 0, 0, 0, 0, err
+		return 0, 0, 0, 0, 0, 0, 0, err
 	}
 
 	// 用预测的和真实的rwsets来预取数据构建并发statedb
 	scatterState := interactState.NewScatterState()
 	scatterState.Prefetch(ibs, predictRwSets)
 	scatterState.Prefetch(ibs, trueRwSets)
-	scatterState.Equal(ibs, predictRwSets)
+	// scatterState.Equal(ibs, predictRwSets)
 	fmt.Println("----------------------------------------")
 
 	// !! 这一串注释用于执行单个交易
@@ -342,8 +351,19 @@ func DAGExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv
 	groupstart := time.Now()
 	groups := graph.GetTopo()
 	groupTime := time.Since(groupstart)
-	createGraphTime := time.Since(graphStart)
+	scheduleTime := time.Since(graphStart)
 	fmt.Println("grouptime:", groupTime)
+
+	maxCost := uint64(0)
+	for i := 0; i < len(groups); i++ {
+		temp := txs[groups[i][0]].GetGas()
+		for j := 1; j < len(groups[i]); j++ {
+			if temp < txs[groups[i][j]].GetGas() {
+				temp = txs[groups[i][j]].GetGas()
+			}
+		}
+		maxCost += temp
+	}
 
 	PureExecutionCost := time.Duration(0)
 
@@ -358,7 +378,7 @@ func DAGExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv
 	timeSum := time.Since(graphStart)
 
 	// 返回建图时间，分组时间，建图分组总时间，执行时间，多轮时间，总时间
-	return len(txs), int64(graphTime.Microseconds()), int64(groupTime.Microseconds()), int64(createGraphTime.Microseconds()), int64(PureExecutionCost.Microseconds()), int64(timeSum.Microseconds()), nil
+	return len(txs), int64(graphTime.Microseconds()), int64(groupTime.Microseconds()), int64(scheduleTime.Microseconds()), maxCost, int64(PureExecutionCost.Microseconds()), int64(timeSum.Microseconds()), nil
 }
 
 func GriaExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.Tx, blockNum uint64, workerNum int) {
@@ -431,3 +451,101 @@ func GriaExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx k
 
 	fmt.Println("Gria Execution Time:", time.Since(st))
 }
+
+// k-batch Gria Execution
+// func KBatchGria(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.Tx, blockNum uint64, workerNum int) {
+// 	k := 3
+// 	blocks := make([]*types.Block, k)
+// 	headers := make([]*types.Header, k)
+
+// 	ibss := make([]evmtypes.IntraBlockState, k)
+// 	txss := make([]types.Transaction, 0)
+
+// 	scatterState := interactState.NewScatterState()
+
+// 	for i := 0; i < k; i++ {
+// 		fmt.Println("prepare ", i, "th block")
+// 		blocks[i], headers[i] = GetBlockAndHeader(blockReader, ctx, dbTx, blockNum+uint64(i))
+// 		ibss[i] = GetState(params.MainnetChainConfig, dbTx, blockNum+uint64(i))
+
+// 		txs, predictRwSets, _ := GetTxsAndPredicts(blockReader, ctx, dbTx, blockNum+uint64(i))
+// 		txss = append(txss, txs...)
+
+// 		trueRwSets, err := TrueRWSets(blockReader, ctx, dbTx, blockNum+uint64(i))
+// 		if err != nil {
+// 			// return 0, 0, 0, 0, 0, 0, err
+// 			return
+// 		}
+
+// 		// 用预测的和真实的rwsets来预取数据构建并发statedb
+// 		scatterState.Prefetch(ibss[i], predictRwSets)
+// 		scatterState.Prefetch(ibss[i], trueRwSets)
+// 	}
+
+// 	blkCtx := GetBlockContext(blockReader, blocks[0], dbTx, headers[0])
+
+// 	// 初始化全局版本链
+// 	gvc := interactState.NewGlobalVersionChain()
+
+// 	st := time.Now()
+// 	// 为每个Processor制作状态代理
+// 	states := make([]*interactState.StateForGria, workerNum)
+// 	for i := 0; i < workerNum; i++ {
+// 		states[i] = interactState.NewStateForGria(scatterState, gvc)
+// 	}
+
+// 	// 贪心分组
+// 	txGroups := gria.GreedyGrouping(txss, workerNum)
+
+// 	// 制作Processor
+// 	GriaProcessor := make([]*GriaGroupWrapper, workerNum)
+// 	for i := 0; i < workerNum; i++ {
+// 		GriaProcessor[i] = NewGriaGroupWrapper(states[i], txGroups[i], headers[0], blkCtx)
+// 	}
+
+// 	// 执行Tx
+// 	wg := sync.WaitGroup{}
+// 	for i := 0; i < workerNum; i++ {
+// 		wg.Add(1)
+// 		go GriaProcessor[i].ProcessTxs(&wg)
+// 	}
+// 	wg.Wait()
+
+// 	// 提交Tx
+// 	for i := 0; i < workerNum; i++ {
+// 		wg.Add(1)
+// 		go GriaProcessor[i].CommitTxs(&wg)
+// 	}
+// 	wg.Wait()
+// 	sum := 0
+// 	for i := 0; i < workerNum; i++ {
+// 		sum += GriaProcessor[i].GetAbortNum()
+// 	}
+// 	fmt.Println("Aborted before rechecking:", sum)
+
+// 	for i := 0; i < workerNum; i++ {
+// 		wg.Add(1)
+// 		go GriaProcessor[i].RecheckTxs(&wg)
+// 	}
+// 	wg.Wait()
+// 	sum = 0
+// 	for i := 0; i < workerNum; i++ {
+// 		sum += GriaProcessor[i].GetAbortNum()
+// 	}
+// 	fmt.Println("Aborted after rechecking:", sum)
+
+// 	fmt.Println("Gria Execution Time:", time.Since(st))
+
+// 	// 构造新的执行后续交易用的statedb
+// 	os := interactState.NewOuterState(gvc, scatterState)
+// 	// 提取abort的交易
+// 	abortTxs := make([]types.Transaction, 0)
+// 	for i := 0; i < workerNum; i++ {
+// 		abortTxs = append(abortTxs, GriaProcessor[i].GetAbortTxs(txss)...)
+// 	}
+
+// 	// 分组调度
+
+// 	// 并行执行剩余交易
+
+// }

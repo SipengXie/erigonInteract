@@ -72,12 +72,12 @@ func (sfg *StateForGria) GetBalance(addr common.Address) *uint256.Int {
 		}
 	}
 	if cur_v.Data != nil {
-		data := cur_v.Data.(uint256.Int)
-		return &data
+		data := cur_v.Data.(*uint256.Int)
+		return data
 	}
 	// cannot read from curVersion or does not been read before, read from stateSnapshot
 	balance = sfg.stateSnapshot.GetBalance(addr)
-	cur_v.Data = *balance
+	cur_v.Data = balance
 	return balance
 }
 

@@ -1,0 +1,45 @@
+[INFO] [07-10|16:03:00.919] Starting 
+[INFO] [07-10|16:03:00.921] [db] open                                lable=chaindata sizeLimit=12TB pageSize=8192
+[INFO] [07-10|16:03:00.921] DB opened 
+[INFO] [07-10|16:03:00.921] DB Transaction started 
+[INFO] [07-10|16:03:05.070] Block Reader created 
+blockNum: 18999499
+Serial Execution Time: 13.025152241s
+blockNum: 18999500
+Serial Execution Time: 12.258001414s
+blockNum: 18999501
+Serial Execution Time: 21.946652988s
+blockNum: 18999502
+Serial Execution Time: 16.772454446s
+blockNum: 18999503
+Serial Execution Time: 24.418483004s
+blockNum: 18999504
+Serial Execution Time: 16.014015361s
+blockNum: 18999505
+Serial Execution Time: 10.329782032s
+blockNum: 18999506
+Serial Execution Time: 14.495576171s
+blockNum: 18999507
+Serial Execution Time: 12.997701209s
+blockNum: 18999508
+Serial Execution Time: 18.794945829s
+blockNum: 18999509
+Serial Execution Time: 7.87753397s
+blockNum: 18999510
+Serial Execution Time: 9.466576643s
+blockNum: 18999511
+Serial Execution Time: 14.760835905s
+blockNum: 18999512
+Serial Execution Time: 10.293811901s
+blockNum: 18999513
+Serial Execution Time: 17.741586502s
+blockNum: 18999514
+Serial Execution Time: 11.195471875s
+blockNum: 18999515
+Serial Execution Time: 7.875454681s
+blockNum: 18999516
+Serial Execution Time: 8.60681642s
+blockNum: 18999517
+Serial Execution Time: 13.360901636s
+blockNum: 18999518
+Serial Execution Time: 10.256737935s

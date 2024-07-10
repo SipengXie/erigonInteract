@@ -161,7 +161,7 @@ func GenerateVertexGroups(txs types.Transactions, predictRWSets []*accesslist.RW
 
 func TestMakeGraph(t *testing.T) {
 	blockNum := uint64(18999999)
-	ctx, dbTx, blockReader := utils.PrepareEnv()
+	ctx, dbTx, blockReader, _ := utils.PrepareEnv()
 	txs, predictRwSets, rwAccessedBy := utils.GetTxsAndPredicts(blockReader, ctx, dbTx, blockNum)
 
 	st := time.Now()

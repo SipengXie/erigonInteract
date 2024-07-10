@@ -2,6 +2,7 @@ package tracer
 
 import (
 	"fmt"
+	"math/big"
 	"sync"
 
 	"github.com/ledgerwatch/erigon/core"
@@ -14,7 +15,7 @@ import (
 
 // This function execute without generating tracer.list
 func ExecuteTx(ibs evmtypes.IntraBlockState, tx types.Transaction, header *types.Header, evm *vm.EVM) (*core.ExecutionResult, error) {
-	msg, err := tx.AsMessage(*types.LatestSigner(params.MainnetChainConfig), header.BaseFee, evm.ChainRules())
+	msg, err := tx.AsMessage(*types.LatestSigner(params.MainnetChainConfig), big.NewInt(0), evm.ChainRules())
 	if err != nil {
 		// This error means the transaction is invalid and should be discarded
 		return nil, err
@@ -27,6 +28,7 @@ func ExecuteTx(ibs evmtypes.IntraBlockState, tx types.Transaction, header *types
 	msg.SetCheckNonce(false)
 	txCtx := core.NewEVMTxContext(msg)
 	evm.TxContext = txCtx
+	msg.SetIsFree(true)
 
 	return core.ApplyMessage(evm, msg, new(core.GasPool).AddGas(header.GasLimit), false /* refunds */, false /* gasBailout */)
 
@@ -38,12 +40,13 @@ func ExecuteTxs(blkCtx evmtypes.BlockContext, txs types.Transactions, header *ty
 	errs := make([]error, len(txs))
 	for i, tx := range txs {
 		// ExecBasedOnRWSets includes the snapshot logic
-		res, err := ExecuteTx(ibs, tx, header, evm)
+		_, err := ExecuteTx(ibs, tx, header, evm)
 		if err != nil {
 			fmt.Println("Error executing transaction:", err, "tid:", i)
-		} else if res.Err != nil {
-			fmt.Println("Error executing transaction in VM layer:", res.Err, "tid:", i)
 		}
+		// else if res.Err != nil {
+		// 	fmt.Println("Error executing transaction in VM layer:", res.Err, "tid:", i)
+		// }
 		errs[i] = err
 	}
 	return errs
@@ -75,14 +78,14 @@ func ExecConflictFreeTxs(pool *ants.Pool, txs types.Transactions, ibs evmtypes.I
 	errs := make([]error, txs.Len())
 	for i := 0; i < len(txs); i++ {
 		taskNum := i
-		evm := vm.NewEVM(blkCtx, evmtypes.TxContext{}, ibs, params.MainnetChainConfig, vm.Config{})
 		// Submit tasks to the ants pool
 		err := pool.Submit(func() {
-			res, err := ExecuteTx(ibs, txs[taskNum], header, evm)
+			evm := vm.NewEVM(blkCtx, evmtypes.TxContext{}, ibs, params.MainnetChainConfig, vm.Config{})
+			_, err := ExecuteTx(ibs, txs[taskNum], header, evm)
 			errs[taskNum] = err
-			if res.Err != nil {
-				fmt.Println("Error executing transaction in VM layer:", res.Err, "thash:", txs[taskNum].Hash().String())
-			}
+			// if res.Err != nil {
+			// 	fmt.Println("Error executing transaction in VM layer:", res.Err, "thash:", txs[taskNum].Hash().String())
+			// }
 			wg.Done() // Mark the task as completed
 		})
 		if err != nil {

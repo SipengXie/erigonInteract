@@ -31,7 +31,7 @@ func (w *GriaGroupWrapper) processTx(tx types.Transaction, tid int, header *type
 	txCtx := core.NewEVMTxContext(msg)
 	evm.TxContext = txCtx
 	w.state.SetTxContext(common.Hash{}, tid)
-
+	msg.SetIsFree(true)
 	// snapshot := ibs.Snapshot()
 	// !! 实际上这里应该有两个层次的Revert，合约层次与EOA层次，在StateForGria中，revert只是修改LocalWrite，实际上是可以做到正确的Revert逻辑的
 	// !! 但我们先忽略这一点
@@ -54,6 +54,12 @@ func (w *GriaGroupWrapper) canCommit(tid int) bool {
 		w.cascadeAbort(tid)
 		return false
 	}
+
+	// if w.readVersions[tid] == nil {
+	// 	// w.cascadeAbort(tid)
+	// 	return false
+	// }
+
 	max_r, min_rn := w.readVersions[tid].ScanRead()
 	max_wp := w.writeVersions[tid].ScanWrite()
 
@@ -142,17 +148,28 @@ func (w *GriaGroupWrapper) ProcessTxs(wait *sync.WaitGroup) {
 	evm := vm.NewEVM(w.blkCtx, evmtypes.TxContext{}, w.state, params.MainnetChainConfig, vm.Config{})
 	rvs := make(map[int]*state.MapVersion)
 	wvs := make(map[int]*state.MapVersion)
+	fmt.Println(len(w.txs))
 	for _, txWithIndex := range w.txs {
+		// if txWithIndex.Tid == 241 {
+		// 	fmt.Println("bingo tid = 241 i'm here")
+		// }
 		res, err := w.processTx(txWithIndex.Tx, txWithIndex.Tid, w.header, evm)
 		if err != nil {
-			fmt.Println("Fatal error:", err)
+			fmt.Println("Fatal error:", err, "tid:", txWithIndex.Tid)
 			continue
 		}
 		if res.Err != nil {
 			fmt.Println("Error executing transaction in VM layer:", res.Err, "tid:", txWithIndex.Tid)
 		}
+
 		rvs[txWithIndex.Tid] = w.state.GetReadSet()
 		wvs[txWithIndex.Tid] = w.state.GetWriteSet()
+		// if txWithIndex.Tid == 5 {
+		// 	fmt.Println("bingo tid = 5", w.state.GetReadSet())
+		// }
+		// if txWithIndex.Tid == 241 {
+		// 	fmt.Println("bingo tid = 241", w.state.GetReadSet())
+		// }
 	}
 	w.readVersions = rvs
 	w.writeVersions = wvs
@@ -162,6 +179,12 @@ func (w *GriaGroupWrapper) ProcessTxs(wait *sync.WaitGroup) {
 func (w *GriaGroupWrapper) CommitTxs(wait *sync.WaitGroup) {
 	defer wait.Done()
 	for _, txWithIndex := range w.txs {
+
+		if w.writeVersions[txWithIndex.Tid] == nil && w.readVersions[txWithIndex.Tid] == nil {
+			w.abort[txWithIndex.Tid] = struct{}{}
+			continue
+		}
+
 		if w.canCommit(txWithIndex.Tid) {
 			w.writeVersions[txWithIndex.Tid].SetStatus(gria.Committed)
 		} else {
@@ -173,10 +196,34 @@ func (w *GriaGroupWrapper) CommitTxs(wait *sync.WaitGroup) {
 func (w *GriaGroupWrapper) RecheckTxs(wait *sync.WaitGroup) {
 	defer wait.Done()
 	for _, txWithIndex := range w.txs {
+
+		if w.writeVersions[txWithIndex.Tid] == nil && w.readVersions[txWithIndex.Tid] == nil {
+			continue
+		}
+
 		if _, ok := w.abort[txWithIndex.Tid]; ok {
 			if w.recheck(txWithIndex.Tid) {
 				delete(w.abort, txWithIndex.Tid)
 			}
 		}
 	}
+}
+
+func (w *GriaGroupWrapper) GetAbortTids() []int {
+	abortTids := make([]int, 0)
+	for tid, _ := range w.abort {
+		abortTids = append(abortTids, tid)
+	}
+	return abortTids
+}
+
+func (w *GriaGroupWrapper) GetAbortTxs(txs types.Transactions) types.Transactions {
+	abortTids := w.GetAbortTids()
+
+	abortTxs := make(types.Transactions, len(abortTids))
+	for i, tid := range abortTids {
+		fmt.Println("Abort tx tid:", tid)
+		abortTxs[i] = txs[tid]
+	}
+	return abortTxs
 }

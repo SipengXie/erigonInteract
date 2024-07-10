@@ -269,13 +269,20 @@ func (s *ScatterState) SetTxContext(_ common.Hash, _ int) {
 }
 
 func (s *ScatterState) Prefetch(statedb evmtypes.IntraBlockState, rwSets accesslist.RWSetList) {
+
 	for _, rwSet := range rwSets {
+		if rwSet == nil {
+			return
+		}
 		for addr, State := range rwSet.ReadSet {
 			for hash := range State {
 				s.prefetch(addr, hash, statedb)
 			}
 		}
 		for addr, State := range rwSet.WriteSet {
+			if rwSet.WriteSet == nil {
+				break
+			}
 			for hash := range State {
 				s.prefetch(addr, hash, statedb)
 			}

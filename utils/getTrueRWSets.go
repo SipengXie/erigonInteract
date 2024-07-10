@@ -21,7 +21,6 @@ func TrueRWSets(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx
 	for i, err := range errs {
 		if err != nil {
 			fmt.Println("In TRUERWSetsS, tx hash:", txs[i].Hash())
-			panic(err)
 		}
 	}
 	return lists, nil

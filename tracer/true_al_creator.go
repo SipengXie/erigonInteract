@@ -3,7 +3,6 @@ package tracer
 import (
 	"erigonInteract/accesslist"
 	"erigonInteract/state"
-	"fmt"
 
 	"github.com/ledgerwatch/erigon/core"
 	"github.com/ledgerwatch/erigon/core/types"
@@ -31,12 +30,12 @@ func CreateRWSetsWithTransactions(fulldb *state.StateWithRwSets, blkCtx evmtypes
 	err := make([]error, len(txs))
 
 	for i, tx := range txs {
-		rws, res, e := ExecToGenerateRWSet(fulldb, tx, header, blkCtx)
+		rws, _, e := ExecToGenerateRWSet(fulldb, tx, header, blkCtx)
 		ret[i] = rws
 		err[i] = e
-		if res.Err != nil {
-			fmt.Println("Error executing transaction in VM layer:", res.Err, "tid:", i)
-		}
+		// if res.Err != nil {
+		// 	fmt.Println("Error executing transaction in VM layer:", res.Err, "tid:", i)
+		// }
 	}
 	return ret, err
 }

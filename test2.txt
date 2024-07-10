@@ -1,0 +1,67 @@
+[INFO] [07-10|16:21:52.608] Starting 
+[INFO] [07-10|16:21:52.610] [db] open                                lable=chaindata sizeLimit=12TB pageSize=8192
+[INFO] [07-10|16:21:52.611] DB opened 
+[INFO] [07-10|16:21:52.611] DB Transaction started 
+[INFO] [07-10|16:21:56.862] Block Reader created 
+ConnectedComponent Execution
+test start
+blockNum: 18999499
+ConnectedComponent Execution
+----------------------------------------
+blockNum: 18999500
+ConnectedComponent Execution
+----------------------------------------
+blockNum: 18999501
+ConnectedComponent Execution
+----------------------------------------
+blockNum: 18999502
+ConnectedComponent Execution
+----------------------------------------
+blockNum: 18999503
+ConnectedComponent Execution
+----------------------------------------
+blockNum: 18999504
+ConnectedComponent Execution
+----------------------------------------
+blockNum: 18999505
+ConnectedComponent Execution
+----------------------------------------
+blockNum: 18999506
+ConnectedComponent Execution
+----------------------------------------
+blockNum: 18999507
+ConnectedComponent Execution
+----------------------------------------
+blockNum: 18999508
+ConnectedComponent Execution
+----------------------------------------
+blockNum: 18999509
+ConnectedComponent Execution
+----------------------------------------
+blockNum: 18999510
+ConnectedComponent Execution
+----------------------------------------
+blockNum: 18999511
+ConnectedComponent Execution
+----------------------------------------
+blockNum: 18999512
+ConnectedComponent Execution
+----------------------------------------
+blockNum: 18999513
+ConnectedComponent Execution
+----------------------------------------
+blockNum: 18999514
+ConnectedComponent Execution
+----------------------------------------
+blockNum: 18999515
+ConnectedComponent Execution
+----------------------------------------
+blockNum: 18999516
+ConnectedComponent Execution
+----------------------------------------
+blockNum: 18999517
+ConnectedComponent Execution
+----------------------------------------
+blockNum: 18999518
+ConnectedComponent Execution
+----------------------------------------

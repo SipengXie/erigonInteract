@@ -19,9 +19,9 @@ import (
 	"golang.org/x/sync/semaphore"
 )
 
-const PATH = "/mnt/chaindata/erigondata/chaindata"
+const PATH = "/mnt/disk1/xsp/erigondata/chaindata"
 const LABEL = kv.ChainDB
-const SNAPSHOT = "/mnt/chaindata/erigondata/snapshots"
+const SNAPSHOT = "/mnt/disk1/xsp/erigondata/snapshots"
 
 func dbCfg(label kv.Label, path string) mdbx.MdbxOpts {
 	const ThreadsLimit = 9_000
@@ -57,7 +57,7 @@ func NewBlockReader(cfg ethconfig.Config) *freezeblocks.BlockReader {
 	return freezeblocks.NewBlockReader(blockSnaps, borSnaps)
 }
 
-func PrepareEnv() (context.Context, kv.Tx, *freezeblocks.BlockReader) {
+func PrepareEnv() (context.Context, kv.Tx, *freezeblocks.BlockReader, kv.RoDB) {
 	consoleHandler := log.LvlFilterHandler(log.LvlInfo, log.StdoutHandler)
 	log.Root().SetHandler(consoleHandler)
 	log.Info("Starting")
@@ -73,14 +73,14 @@ func PrepareEnv() (context.Context, kv.Tx, *freezeblocks.BlockReader) {
 	dbTx, err := db.BeginRo(ctx)
 	if err != nil {
 		log.Error("Failed to begin transaction", "err", err)
-		return nil, nil, nil
+		return nil, nil, nil, nil
 	}
 	log.Info("DB Transaction started")
 
 	blockReader := NewBlockReader(cfg)
 	log.Info("Block Reader created")
 
-	return ctx, dbTx, blockReader
+	return ctx, dbTx, blockReader, db
 }
 
 func GetBlockAndHeader(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.Tx, blockNumber uint64) (*types.Block, *types.Header) {

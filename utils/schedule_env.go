@@ -4,6 +4,7 @@ import (
 	"erigonInteract/accesslist"
 	conflictgraph "erigonInteract/conflictGraph"
 	"erigonInteract/mis"
+	"erigonInteract/oldmis"
 	"sort"
 
 	"github.com/ledgerwatch/erigon/core/types"
@@ -91,6 +92,11 @@ func GenerateVertexIdGroups(txs types.Transactions, rwAccessedBy *accesslist.RwA
 func GenerateMISGroups(txs types.Transactions, rwAccessedBy *accesslist.RwAccessedBy) [][]uint {
 	undiGraph := GenerateUndiGraph(len(txs), rwAccessedBy)
 	return SolveMISInTurn(undiGraph)
+}
+
+func GenerateOldMISGroups(txs types.Transactions, predictRWSets accesslist.RWSetList) [][]uint {
+	undiGraph := oldmis.OldGenerateUndiGraph(txs, predictRWSets)
+	return oldmis.OldSolveMISInTurn(undiGraph)
 }
 
 func GenerateDiGraph(vertexNum int, rwAccessedBy *accesslist.RwAccessedBy) *conflictgraph.DirectedGraph {

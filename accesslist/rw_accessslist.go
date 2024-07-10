@@ -221,6 +221,9 @@ func NewRwAccessedBy() *RwAccessedBy {
 }
 
 func (rw *RwAccessedBy) Add(set *RWSet, txId uint) {
+	if set == nil {
+		return
+	}
 	for addr, state := range set.ReadSet {
 		for hash := range state {
 			rw.ReadBy.Add(addr, hash, txId)

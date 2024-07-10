@@ -9,17 +9,17 @@ type cache map[common.Hash]uint256.Int
 
 // only need getter and setter
 type LocalWrite struct {
-	localBalance  map[common.Address]uint256.Int // Tx view localWrite for Balance
-	localNonce    map[common.Address]uint64      // Tx view localWrite for Nonce
-	localStorage  map[common.Address]cache       // Tx view localWrite for Storage
-	localCode     map[common.Address][]byte      // Tx view localWrite for Code
-	localCodeHash map[common.Address]common.Hash // Tx view localWrite for CodeHash
-	localAlive    map[common.Address]bool        // Tx view localWrite for Alive
+	localBalance  map[common.Address]*uint256.Int // Tx view localWrite for Balance
+	localNonce    map[common.Address]uint64       // Tx view localWrite for Nonce
+	localStorage  map[common.Address]cache        // Tx view localWrite for Storage
+	localCode     map[common.Address][]byte       // Tx view localWrite for Code
+	localCodeHash map[common.Address]common.Hash  // Tx view localWrite for CodeHash
+	localAlive    map[common.Address]bool         // Tx view localWrite for Alive
 }
 
 func newLocalWrite() *LocalWrite {
 	return &LocalWrite{
-		localBalance:  make(map[common.Address]uint256.Int),
+		localBalance:  make(map[common.Address]*uint256.Int),
 		localNonce:    make(map[common.Address]uint64),
 		localStorage:  make(map[common.Address]cache),
 		localCode:     make(map[common.Address][]byte),
@@ -31,7 +31,7 @@ func newLocalWrite() *LocalWrite {
 // ------------------ Getters for localWrite -----------------------
 func (l *LocalWrite) getBalance(addr common.Address) (*uint256.Int, bool) {
 	balance, ok := l.localBalance[addr]
-	return &balance, ok
+	return balance, ok
 }
 
 func (l *LocalWrite) getNonce(addr common.Address) (uint64, bool) {
@@ -66,6 +66,9 @@ func (l *LocalWrite) getAlive(addr common.Address) (bool, bool) {
 // ------------------ Setters for localWrite -----------------------
 func (l *LocalWrite) setBalance(addr common.Address, balance *uint256.Int) {
 	b := l.localBalance[addr]
+	if b == nil {
+		b = new(uint256.Int)
+	}
 	b.Set(balance)
 }
 
