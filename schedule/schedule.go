@@ -301,7 +301,7 @@ func MIS(txs types.Transactions, predictRwSets []*accesslist.RWSet, wg *sync.Wai
 func SCC(sr *ScheduleRes) (int64, error) {
 	// 准备线程池
 	var antsWG sync.WaitGroup
-	antsPool, _ := ants.NewPool(16, ants.WithPreAlloc(true))
+	antsPool, _ := ants.NewPool(64, ants.WithPreAlloc(true))
 	defer antsPool.Release()
 
 	// 并发执行
@@ -316,7 +316,7 @@ func SCC(sr *ScheduleRes) (int64, error) {
 func SDAG(sr *ScheduleRes) (int64, error) {
 	// 准备线程池
 	var antsWG sync.WaitGroup
-	antsPool, _ := ants.NewPool(16, ants.WithPreAlloc(true))
+	antsPool, _ := ants.NewPool(64, ants.WithPreAlloc(true))
 	defer antsPool.Release()
 
 	PureExecutionCost := time.Duration(0)

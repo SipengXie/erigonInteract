@@ -139,7 +139,7 @@ func apexPlusExec(blockReader *freezeblocks.BlockReader, ctx context.Context, db
 	// 使用CC并行执行剩余交易
 	// 准备线程池
 	var antsWG sync.WaitGroup
-	antsPool, _ := ants.NewPool(16, ants.WithPreAlloc(true))
+	antsPool, _ := ants.NewPool(64, ants.WithPreAlloc(true))
 	defer antsPool.Release()
 	// 建图分组
 	graphStart := time.Now()
@@ -200,5 +200,5 @@ func main() {
 	pe := schedule.NewPipeLineExecutor()
 	pe.PipeLineExec(blockReader, ctx, db, 18999999-499)
 
-	ApesPtest(blockReader, ctx, dbTx, 18999999-499, 4)
+	ApesPtest(blockReader, ctx, dbTx, 18999999-499, 64)
 }

@@ -135,7 +135,7 @@ func CCExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.
 	fmt.Println("----------------------------------------")
 	// 准备线程池
 	var antsWG sync.WaitGroup
-	antsPool, _ := ants.NewPool(16, ants.WithPreAlloc(true))
+	antsPool, _ := ants.NewPool(64, ants.WithPreAlloc(true))
 	defer antsPool.Release()
 
 	// antsWG.Add(2)
@@ -230,7 +230,7 @@ func MISExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv
 	scatterState.Prefetch(ibs, predictRwSets)
 	scatterState.Prefetch(ibs, trueRwSets)
 	fmt.Println("----------------------------------------")
-	antsPool, _ := ants.NewPool(16, ants.WithPreAlloc(true))
+	antsPool, _ := ants.NewPool(64, ants.WithPreAlloc(true))
 	defer antsPool.Release()
 	var antsWG sync.WaitGroup
 
@@ -337,7 +337,7 @@ func DAGExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv
 	// return 0, 0, 0, 0, 0, 0, nil
 
 	// !! 这一串是正牌DAG
-	antsPool, _ := ants.NewPool(16, ants.WithPreAlloc(true))
+	antsPool, _ := ants.NewPool(64, ants.WithPreAlloc(true))
 	defer antsPool.Release()
 	var antsWG sync.WaitGroup
 

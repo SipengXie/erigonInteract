@@ -1,0 +1,1012 @@
+[INFO] [07-11|10:39:32.255] Starting 
+[INFO] [07-11|10:39:32.333] [db] open                                lable=chaindata sizeLimit=12TB pageSize=8192
+[INFO] [07-11|10:39:32.337] DB opened 
+[INFO] [07-11|10:39:32.337] DB Transaction started 
+[INFO] [07-11|10:40:03.031] Starting 
+[INFO] [07-11|10:40:03.033] [db] open                                lable=chaindata sizeLimit=12TB pageSize=8192
+[INFO] [07-11|10:40:03.033] DB opened 
+[INFO] [07-11|10:40:03.033] DB Transaction started 
+[INFO] [07-11|10:40:07.601] Block Reader created 
+blockNum: 18999500
+Serial Execution Time: 2.864378547s
+blockNum: 18999501
+Serial Execution Time: 3.410108416s
+blockNum: 18999502
+Serial Execution Time: 2.065169113s
+blockNum: 18999503
+Serial Execution Time: 3.206158281s
+blockNum: 18999504
+Serial Execution Time: 2.232776987s
+blockNum: 18999505
+Serial Execution Time: 1.264417968s
+blockNum: 18999506
+Serial Execution Time: 1.848179268s
+blockNum: 18999507
+Serial Execution Time: 1.705938903s
+blockNum: 18999508
+Serial Execution Time: 2.0707736s
+blockNum: 18999509
+Serial Execution Time: 1.123183857s
+blockNum: 18999510
+Serial Execution Time: 1.024036457s
+blockNum: 18999511
+Serial Execution Time: 1.670869159s
+blockNum: 18999512
+Serial Execution Time: 1.109188238s
+blockNum: 18999513
+Serial Execution Time: 2.056916838s
+blockNum: 18999514
+Serial Execution Time: 1.409213203s
+blockNum: 18999515
+Serial Execution Time: 856.473989ms
+blockNum: 18999516
+Serial Execution Time: 929.79128ms
+blockNum: 18999517
+Serial Execution Time: 1.399791525s
+blockNum: 18999518
+Serial Execution Time: 1.139467303s
+blockNum: 18999519
+Serial Execution Time: 935.089138ms
+blockNum: 18999520
+Serial Execution Time: 1.693362236s
+blockNum: 18999521
+Serial Execution Time: 1.006719268s
+blockNum: 18999522
+Serial Execution Time: 1.136042345s
+blockNum: 18999523
+Serial Execution Time: 1.048583854s
+blockNum: 18999524
+Serial Execution Time: 987.281126ms
+blockNum: 18999525
+Serial Execution Time: 1.252233746s
+blockNum: 18999526
+Serial Execution Time: 1.058293442s
+blockNum: 18999527
+Serial Execution Time: 2.001420952s
+blockNum: 18999528
+Serial Execution Time: 538.53557ms
+blockNum: 18999529
+Serial Execution Time: 1.031181739s
+blockNum: 18999530
+Serial Execution Time: 625.451782ms
+blockNum: 18999531
+Serial Execution Time: 822.509629ms
+blockNum: 18999532
+Serial Execution Time: 1.179798202s
+blockNum: 18999533
+Serial Execution Time: 1.197154664s
+blockNum: 18999534
+Serial Execution Time: 802.733089ms
+blockNum: 18999535
+Serial Execution Time: 912.522174ms
+blockNum: 18999536
+Serial Execution Time: 2.636943583s
+blockNum: 18999537
+Serial Execution Time: 644.108551ms
+blockNum: 18999538
+Serial Execution Time: 586.768356ms
+blockNum: 18999539
+Serial Execution Time: 966.577932ms
+blockNum: 18999540
+Serial Execution Time: 595.59931ms
+blockNum: 18999541
+Serial Execution Time: 519.989632ms
+blockNum: 18999542
+Serial Execution Time: 2.447217085s
+blockNum: 18999543
+Serial Execution Time: 625.329712ms
+blockNum: 18999544
+Serial Execution Time: 1.13410581s
+blockNum: 18999545
+Serial Execution Time: 942.961855ms
+blockNum: 18999546
+Serial Execution Time: 762.444618ms
+blockNum: 18999547
+Serial Execution Time: 1.175661048s
+blockNum: 18999548
+Serial Execution Time: 986.314917ms
+blockNum: 18999549
+Serial Execution Time: 1.085569797s
+blockNum: 18999550
+Serial Execution Time: 679.145348ms
+blockNum: 18999551
+Serial Execution Time: 1.138494433s
+blockNum: 18999552
+Serial Execution Time: 546.358663ms
+blockNum: 18999553
+Serial Execution Time: 1.29695052s
+blockNum: 18999554
+Serial Execution Time: 913.917844ms
+blockNum: 18999555
+Serial Execution Time: 81.820857ms
+blockNum: 18999556
+Serial Execution Time: 2.66168007s
+blockNum: 18999557
+Serial Execution Time: 1.4458007s
+blockNum: 18999558
+Serial Execution Time: 506.152073ms
+blockNum: 18999559
+Serial Execution Time: 1.00598527s
+blockNum: 18999560
+Serial Execution Time: 662.632158ms
+blockNum: 18999561
+Serial Execution Time: 878.103958ms
+blockNum: 18999562
+Serial Execution Time: 432.279177ms
+blockNum: 18999563
+Serial Execution Time: 426.410538ms
+blockNum: 18999564
+Serial Execution Time: 1.01360357s
+blockNum: 18999565
+Serial Execution Time: 567.015905ms
+blockNum: 18999566
+Serial Execution Time: 801.013412ms
+blockNum: 18999567
+Serial Execution Time: 575.157624ms
+blockNum: 18999568
+Serial Execution Time: 431.459242ms
+blockNum: 18999569
+Serial Execution Time: 1.079635663s
+blockNum: 18999570
+Serial Execution Time: 659.618052ms
+blockNum: 18999571
+Serial Execution Time: 742.623996ms
+blockNum: 18999572
+Serial Execution Time: 1.189659631s
+blockNum: 18999573
+Serial Execution Time: 493.257701ms
+blockNum: 18999574
+Serial Execution Time: 656.684934ms
+blockNum: 18999575
+Serial Execution Time: 634.251096ms
+blockNum: 18999576
+Serial Execution Time: 945.463799ms
+blockNum: 18999577
+Serial Execution Time: 929.413275ms
+blockNum: 18999578
+Serial Execution Time: 661.207998ms
+blockNum: 18999579
+Serial Execution Time: 846.467049ms
+blockNum: 18999580
+Serial Execution Time: 619.421929ms
+blockNum: 18999581
+Serial Execution Time: 891.055354ms
+blockNum: 18999582
+Serial Execution Time: 710.410273ms
+blockNum: 18999583
+Serial Execution Time: 455.410205ms
+blockNum: 18999584
+Serial Execution Time: 570.861665ms
+blockNum: 18999585
+Serial Execution Time: 699.642479ms
+blockNum: 18999586
+Serial Execution Time: 827.398072ms
+blockNum: 18999587
+Serial Execution Time: 697.111118ms
+blockNum: 18999588
+Serial Execution Time: 776.529628ms
+blockNum: 18999589
+Serial Execution Time: 592.827526ms
+blockNum: 18999590
+Serial Execution Time: 886.974927ms
+blockNum: 18999591
+Serial Execution Time: 722.695898ms
+blockNum: 18999592
+Serial Execution Time: 514.48342ms
+blockNum: 18999593
+Serial Execution Time: 509.697268ms
+blockNum: 18999594
+Serial Execution Time: 452.417763ms
+blockNum: 18999595
+Serial Execution Time: 1.129146443s
+blockNum: 18999596
+Serial Execution Time: 664.639874ms
+blockNum: 18999597
+Serial Execution Time: 612.727447ms
+blockNum: 18999598
+Serial Execution Time: 736.9577ms
+blockNum: 18999599
+Serial Execution Time: 665.393549ms
+blockNum: 18999600
+Serial Execution Time: 608.947169ms
+blockNum: 18999601
+Serial Execution Time: 853.026122ms
+blockNum: 18999602
+Serial Execution Time: 481.916948ms
+blockNum: 18999603
+Serial Execution Time: 720.978622ms
+blockNum: 18999604
+Serial Execution Time: 484.703861ms
+blockNum: 18999605
+Serial Execution Time: 638.341763ms
+blockNum: 18999606
+Serial Execution Time: 702.8262ms
+blockNum: 18999607
+Serial Execution Time: 574.209693ms
+blockNum: 18999608
+Serial Execution Time: 681.332958ms
+blockNum: 18999609
+Serial Execution Time: 591.772774ms
+blockNum: 18999610
+Serial Execution Time: 592.706434ms
+blockNum: 18999611
+Serial Execution Time: 626.56276ms
+blockNum: 18999612
+Serial Execution Time: 797.744413ms
+blockNum: 18999613
+Serial Execution Time: 408.770507ms
+blockNum: 18999614
+Serial Execution Time: 56.257518ms
+blockNum: 18999615
+Serial Execution Time: 1.482389307s
+blockNum: 18999616
+Serial Execution Time: 1.378015627s
+blockNum: 18999617
+Serial Execution Time: 976.322848ms
+blockNum: 18999618
+Serial Execution Time: 694.157702ms
+blockNum: 18999619
+Serial Execution Time: 442.106458ms
+blockNum: 18999620
+Serial Execution Time: 627.355075ms
+blockNum: 18999621
+Serial Execution Time: 558.077693ms
+blockNum: 18999622
+Serial Execution Time: 670.147336ms
+blockNum: 18999623
+Serial Execution Time: 505.548013ms
+blockNum: 18999624
+Serial Execution Time: 369.774653ms
+blockNum: 18999625
+Serial Execution Time: 570.597898ms
+blockNum: 18999626
+Serial Execution Time: 704.029626ms
+blockNum: 18999627
+Serial Execution Time: 515.39886ms
+blockNum: 18999628
+Serial Execution Time: 307.413398ms
+blockNum: 18999629
+Serial Execution Time: 764.447508ms
+blockNum: 18999630
+Serial Execution Time: 530.819738ms
+blockNum: 18999631
+Serial Execution Time: 515.488601ms
+blockNum: 18999632
+Serial Execution Time: 356.221301ms
+blockNum: 18999633
+Serial Execution Time: 546.381787ms
+blockNum: 18999634
+Serial Execution Time: 881.289114ms
+blockNum: 18999635
+Serial Execution Time: 467.140331ms
+blockNum: 18999636
+Serial Execution Time: 520.952187ms
+blockNum: 18999637
+Serial Execution Time: 758.876931ms
+blockNum: 18999638
+Serial Execution Time: 476.570729ms
+blockNum: 18999639
+Serial Execution Time: 346.52646ms
+blockNum: 18999640
+Serial Execution Time: 629.861785ms
+blockNum: 18999641
+Serial Execution Time: 630.820652ms
+blockNum: 18999642
+Serial Execution Time: 582.763165ms
+blockNum: 18999643
+Serial Execution Time: 621.27252ms
+blockNum: 18999644
+Serial Execution Time: 545.435613ms
+blockNum: 18999645
+Serial Execution Time: 455.042595ms
+blockNum: 18999646
+Serial Execution Time: 1.093076182s
+blockNum: 18999647
+Serial Execution Time: 564.192326ms
+blockNum: 18999648
+Serial Execution Time: 656.841004ms
+blockNum: 18999649
+Serial Execution Time: 612.692336ms
+blockNum: 18999650
+Serial Execution Time: 607.637754ms
+blockNum: 18999651
+Serial Execution Time: 807.418283ms
+blockNum: 18999652
+Serial Execution Time: 595.270276ms
+blockNum: 18999653
+Serial Execution Time: 595.593978ms
+blockNum: 18999654
+Serial Execution Time: 445.311172ms
+blockNum: 18999655
+Serial Execution Time: 2.132666538s
+blockNum: 18999656
+Serial Execution Time: 563.117232ms
+blockNum: 18999657
+Serial Execution Time: 579.48887ms
+blockNum: 18999658
+Serial Execution Time: 445.615052ms
+blockNum: 18999659
+Serial Execution Time: 536.16716ms
+blockNum: 18999660
+Serial Execution Time: 419.808671ms
+blockNum: 18999661
+Serial Execution Time: 660.109323ms
+blockNum: 18999662
+Serial Execution Time: 352.51882ms
+blockNum: 18999663
+Serial Execution Time: 414.746617ms
+blockNum: 18999664
+Serial Execution Time: 268.530709ms
+blockNum: 18999665
+Serial Execution Time: 551.695844ms
+blockNum: 18999666
+Serial Execution Time: 658.759556ms
+blockNum: 18999667
+Serial Execution Time: 508.118043ms
+blockNum: 18999668
+Serial Execution Time: 489.397551ms
+blockNum: 18999669
+Serial Execution Time: 226.701018ms
+blockNum: 18999670
+Serial Execution Time: 97.628046ms
+blockNum: 18999671
+Serial Execution Time: 1.263192664s
+blockNum: 18999672
+Serial Execution Time: 279.903713ms
+blockNum: 18999673
+Serial Execution Time: 714.616721ms
+blockNum: 18999674
+Serial Execution Time: 510.351491ms
+blockNum: 18999675
+Serial Execution Time: 445.93029ms
+blockNum: 18999676
+Serial Execution Time: 648.172467ms
+blockNum: 18999677
+Serial Execution Time: 510.637522ms
+blockNum: 18999678
+Serial Execution Time: 552.788382ms
+blockNum: 18999679
+Serial Execution Time: 430.93331ms
+blockNum: 18999680
+Serial Execution Time: 452.060358ms
+blockNum: 18999681
+Serial Execution Time: 423.182903ms
+blockNum: 18999682
+Serial Execution Time: 573.491162ms
+blockNum: 18999683
+Serial Execution Time: 607.587182ms
+blockNum: 18999684
+Serial Execution Time: 572.498848ms
+blockNum: 18999685
+Serial Execution Time: 517.284387ms
+blockNum: 18999686
+Serial Execution Time: 692.279347ms
+blockNum: 18999687
+Serial Execution Time: 420.276702ms
+blockNum: 18999688
+Serial Execution Time: 552.045925ms
+blockNum: 18999689
+Serial Execution Time: 341.702942ms
+blockNum: 18999690
+Serial Execution Time: 585.572874ms
+blockNum: 18999691
+Serial Execution Time: 508.710835ms
+blockNum: 18999692
+Serial Execution Time: 472.072855ms
+blockNum: 18999693
+Serial Execution Time: 479.480165ms
+blockNum: 18999694
+Serial Execution Time: 332.591917ms
+blockNum: 18999695
+Serial Execution Time: 331.483043ms
+blockNum: 18999696
+Serial Execution Time: 877.417772ms
+blockNum: 18999697
+Serial Execution Time: 604.37481ms
+blockNum: 18999698
+Serial Execution Time: 480.944381ms
+blockNum: 18999699
+Serial Execution Time: 498.178332ms
+blockNum: 18999700
+Serial Execution Time: 536.199797ms
+blockNum: 18999701
+Serial Execution Time: 659.696252ms
+blockNum: 18999702
+Serial Execution Time: 630.469412ms
+blockNum: 18999703
+Serial Execution Time: 582.543302ms
+blockNum: 18999704
+Serial Execution Time: 407.550846ms
+blockNum: 18999705
+Serial Execution Time: 653.451805ms
+blockNum: 18999706
+Serial Execution Time: 792.143939ms
+blockNum: 18999707
+Serial Execution Time: 357.985954ms
+blockNum: 18999708
+Serial Execution Time: 567.03513ms
+blockNum: 18999709
+Serial Execution Time: 732.550806ms
+blockNum: 18999710
+Serial Execution Time: 408.360019ms
+blockNum: 18999711
+Serial Execution Time: 673.401426ms
+blockNum: 18999712
+Serial Execution Time: 534.415573ms
+blockNum: 18999713
+Serial Execution Time: 371.289665ms
+blockNum: 18999714
+Serial Execution Time: 374.525428ms
+blockNum: 18999715
+Serial Execution Time: 599.990428ms
+blockNum: 18999716
+Serial Execution Time: 591.910477ms
+blockNum: 18999717
+Serial Execution Time: 237.998481ms
+blockNum: 18999718
+Serial Execution Time: 747.348888ms
+blockNum: 18999719
+Serial Execution Time: 561.000079ms
+blockNum: 18999720
+Serial Execution Time: 287.803748ms
+blockNum: 18999721
+Serial Execution Time: 755.485191ms
+blockNum: 18999722
+Serial Execution Time: 467.5458ms
+blockNum: 18999723
+Serial Execution Time: 553.59023ms
+blockNum: 18999724
+Serial Execution Time: 347.924436ms
+blockNum: 18999725
+Serial Execution Time: 588.412692ms
+blockNum: 18999726
+Serial Execution Time: 365.543795ms
+blockNum: 18999727
+Serial Execution Time: 448.933205ms
+blockNum: 18999728
+Serial Execution Time: 420.708818ms
+blockNum: 18999729
+Serial Execution Time: 523.318854ms
+blockNum: 18999730
+Serial Execution Time: 338.415412ms
+blockNum: 18999731
+Serial Execution Time: 349.496195ms
+blockNum: 18999732
+Serial Execution Time: 1.153948109s
+blockNum: 18999733
+Serial Execution Time: 361.272795ms
+blockNum: 18999734
+Serial Execution Time: 665.974649ms
+blockNum: 18999735
+Serial Execution Time: 591.975864ms
+blockNum: 18999736
+Serial Execution Time: 572.192243ms
+blockNum: 18999737
+Serial Execution Time: 461.169981ms
+blockNum: 18999738
+Serial Execution Time: 387.136071ms
+blockNum: 18999739
+Serial Execution Time: 629.919484ms
+blockNum: 18999740
+Serial Execution Time: 440.848532ms
+blockNum: 18999741
+Serial Execution Time: 412.166741ms
+blockNum: 18999742
+Serial Execution Time: 534.117092ms
+blockNum: 18999743
+Serial Execution Time: 491.09097ms
+blockNum: 18999744
+Serial Execution Time: 533.147104ms
+blockNum: 18999745
+Serial Execution Time: 520.065431ms
+blockNum: 18999746
+Serial Execution Time: 1.088168956s
+blockNum: 18999747
+Serial Execution Time: 626.746847ms
+blockNum: 18999748
+Serial Execution Time: 308.262227ms
+blockNum: 18999749
+Serial Execution Time: 515.340721ms
+blockNum: 18999750
+Serial Execution Time: 500.935006ms
+blockNum: 18999751
+Serial Execution Time: 452.213975ms
+blockNum: 18999752
+Serial Execution Time: 715.399226ms
+blockNum: 18999753
+Serial Execution Time: 366.955207ms
+blockNum: 18999754
+Serial Execution Time: 371.545737ms
+blockNum: 18999755
+Serial Execution Time: 519.230304ms
+blockNum: 18999756
+Serial Execution Time: 612.758701ms
+blockNum: 18999757
+Serial Execution Time: 422.395397ms
+blockNum: 18999758
+Error executing transaction: insufficient funds for gas * price + value: address 0x7aDc0e867EBc337E2d20c44DB181c067fA08637b have 0 want 47549524700127782 tid: 123
+Serial Execution Time: 338.836195ms
+blockNum: 18999759
+Serial Execution Time: 408.401512ms
+blockNum: 18999760
+Serial Execution Time: 595.599427ms
+blockNum: 18999761
+Serial Execution Time: 371.052231ms
+blockNum: 18999762
+Serial Execution Time: 312.791395ms
+blockNum: 18999763
+Serial Execution Time: 514.01248ms
+blockNum: 18999764
+Serial Execution Time: 444.308579ms
+blockNum: 18999765
+Serial Execution Time: 486.189976ms
+blockNum: 18999766
+Error executing transaction: insufficient funds for gas * price + value: address 0x7aDc0e867EBc337E2d20c44DB181c067fA08637b have 0 want 69589233923079155 tid: 263
+Serial Execution Time: 588.989861ms
+blockNum: 18999767
+Serial Execution Time: 553.841834ms
+blockNum: 18999768
+Serial Execution Time: 647.666156ms
+blockNum: 18999769
+Serial Execution Time: 478.241618ms
+blockNum: 18999770
+Serial Execution Time: 610.86734ms
+blockNum: 18999771
+Serial Execution Time: 402.373764ms
+blockNum: 18999772
+Serial Execution Time: 444.257071ms
+blockNum: 18999773
+Serial Execution Time: 580.731077ms
+blockNum: 18999774
+Serial Execution Time: 392.029608ms
+blockNum: 18999775
+Serial Execution Time: 441.310441ms
+blockNum: 18999776
+Serial Execution Time: 500.939249ms
+blockNum: 18999777
+Serial Execution Time: 427.119441ms
+blockNum: 18999778
+Serial Execution Time: 352.755412ms
+blockNum: 18999779
+Serial Execution Time: 318.480003ms
+blockNum: 18999780
+Serial Execution Time: 361.493787ms
+blockNum: 18999781
+Serial Execution Time: 543.969279ms
+blockNum: 18999782
+Serial Execution Time: 468.439118ms
+blockNum: 18999783
+Serial Execution Time: 380.389613ms
+blockNum: 18999784
+Serial Execution Time: 330.9213ms
+blockNum: 18999785
+Serial Execution Time: 477.060286ms
+blockNum: 18999786
+Serial Execution Time: 456.484408ms
+blockNum: 18999787
+Serial Execution Time: 481.210204ms
+blockNum: 18999788
+Serial Execution Time: 413.17769ms
+blockNum: 18999789
+Serial Execution Time: 275.252063ms
+blockNum: 18999790
+Serial Execution Time: 550.610183ms
+blockNum: 18999791
+Serial Execution Time: 570.991242ms
+blockNum: 18999792
+Serial Execution Time: 655.911193ms
+blockNum: 18999793
+Serial Execution Time: 259.266994ms
+blockNum: 18999794
+Serial Execution Time: 570.985012ms
+blockNum: 18999795
+Serial Execution Time: 403.405324ms
+blockNum: 18999796
+Serial Execution Time: 472.28187ms
+blockNum: 18999797
+Serial Execution Time: 451.663655ms
+blockNum: 18999798
+Serial Execution Time: 382.779462ms
+blockNum: 18999799
+Serial Execution Time: 265.918966ms
+blockNum: 18999800
+Serial Execution Time: 512.797287ms
+blockNum: 18999801
+Serial Execution Time: 287.00679ms
+blockNum: 18999802
+Serial Execution Time: 666.448332ms
+blockNum: 18999803
+Serial Execution Time: 354.533302ms
+blockNum: 18999804
+Serial Execution Time: 385.764478ms
+blockNum: 18999805
+Serial Execution Time: 290.599849ms
+blockNum: 18999806
+Serial Execution Time: 492.887021ms
+blockNum: 18999807
+Serial Execution Time: 238.881174ms
+blockNum: 18999808
+Serial Execution Time: 61.218154ms
+blockNum: 18999809
+Serial Execution Time: 1.018970565s
+blockNum: 18999810
+Serial Execution Time: 457.934059ms
+blockNum: 18999811
+Serial Execution Time: 450.137757ms
+blockNum: 18999812
+Serial Execution Time: 438.709988ms
+blockNum: 18999813
+Serial Execution Time: 449.216234ms
+blockNum: 18999814
+Serial Execution Time: 324.358482ms
+blockNum: 18999815
+Serial Execution Time: 635.071006ms
+blockNum: 18999816
+Serial Execution Time: 363.721304ms
+blockNum: 18999817
+Serial Execution Time: 429.012774ms
+blockNum: 18999818
+Serial Execution Time: 333.987703ms
+blockNum: 18999819
+Serial Execution Time: 303.423297ms
+blockNum: 18999820
+Serial Execution Time: 372.763301ms
+blockNum: 18999821
+Serial Execution Time: 476.129125ms
+blockNum: 18999822
+Serial Execution Time: 401.954442ms
+blockNum: 18999823
+Serial Execution Time: 582.885923ms
+blockNum: 18999824
+Serial Execution Time: 339.207481ms
+blockNum: 18999825
+Serial Execution Time: 395.388513ms
+blockNum: 18999826
+Serial Execution Time: 422.948336ms
+blockNum: 18999827
+Serial Execution Time: 372.787877ms
+blockNum: 18999828
+Serial Execution Time: 366.401899ms
+blockNum: 18999829
+Serial Execution Time: 312.56678ms
+blockNum: 18999830
+Serial Execution Time: 311.707593ms
+blockNum: 18999831
+Serial Execution Time: 523.76932ms
+blockNum: 18999832
+Serial Execution Time: 229.820697ms
+blockNum: 18999833
+Serial Execution Time: 555.428234ms
+blockNum: 18999834
+Serial Execution Time: 309.763389ms
+blockNum: 18999835
+Serial Execution Time: 492.883695ms
+blockNum: 18999836
+Serial Execution Time: 781.853335ms
+blockNum: 18999837
+Serial Execution Time: 292.715025ms
+blockNum: 18999838
+Serial Execution Time: 557.988411ms
+blockNum: 18999839
+Serial Execution Time: 435.002538ms
+blockNum: 18999840
+Serial Execution Time: 278.225361ms
+blockNum: 18999841
+Serial Execution Time: 465.528115ms
+blockNum: 18999842
+Serial Execution Time: 558.46057ms
+blockNum: 18999843
+Serial Execution Time: 416.936151ms
+blockNum: 18999844
+Serial Execution Time: 475.480816ms
+blockNum: 18999845
+Serial Execution Time: 375.611556ms
+blockNum: 18999846
+Serial Execution Time: 327.997459ms
+blockNum: 18999847
+Serial Execution Time: 783.459215ms
+blockNum: 18999848
+Serial Execution Time: 382.940362ms
+blockNum: 18999849
+Serial Execution Time: 311.876091ms
+blockNum: 18999850
+Serial Execution Time: 418.049862ms
+blockNum: 18999851
+Serial Execution Time: 384.530375ms
+blockNum: 18999852
+Serial Execution Time: 362.315807ms
+blockNum: 18999853
+Serial Execution Time: 471.510778ms
+blockNum: 18999854
+Serial Execution Time: 501.409719ms
+blockNum: 18999855
+Serial Execution Time: 655.130526ms
+blockNum: 18999856
+Serial Execution Time: 530.80703ms
+blockNum: 18999857
+Serial Execution Time: 567.226454ms
+blockNum: 18999858
+Serial Execution Time: 370.061287ms
+blockNum: 18999859
+Serial Execution Time: 315.038766ms
+blockNum: 18999860
+Serial Execution Time: 577.699891ms
+blockNum: 18999861
+Serial Execution Time: 408.305905ms
+blockNum: 18999862
+Serial Execution Time: 248.882319ms
+blockNum: 18999863
+Serial Execution Time: 489.573106ms
+blockNum: 18999864
+Serial Execution Time: 355.262379ms
+blockNum: 18999865
+Serial Execution Time: 516.386289ms
+blockNum: 18999866
+Serial Execution Time: 370.018111ms
+blockNum: 18999867
+Serial Execution Time: 531.559066ms
+blockNum: 18999868
+Serial Execution Time: 392.470135ms
+blockNum: 18999869
+Serial Execution Time: 370.828518ms
+blockNum: 18999870
+Serial Execution Time: 433.957643ms
+blockNum: 18999871
+Serial Execution Time: 530.518417ms
+blockNum: 18999872
+Serial Execution Time: 460.254328ms
+blockNum: 18999873
+Serial Execution Time: 206.027286ms
+blockNum: 18999874
+Serial Execution Time: 368.54389ms
+blockNum: 18999875
+Serial Execution Time: 466.896849ms
+blockNum: 18999876
+Serial Execution Time: 388.417312ms
+blockNum: 18999877
+Serial Execution Time: 315.021439ms
+blockNum: 18999878
+Serial Execution Time: 336.213635ms
+blockNum: 18999879
+Serial Execution Time: 281.719189ms
+blockNum: 18999880
+Error executing transaction: insufficient funds for gas * price + value: address 0xDDebA68B2e3e0f2C56A63F4a9ADD6978C167024E have 18694947823504933 want 19893186023862754 tid: 18
+Serial Execution Time: 383.165906ms
+blockNum: 18999881
+Serial Execution Time: 340.662452ms
+blockNum: 18999882
+Serial Execution Time: 657.125688ms
+blockNum: 18999883
+Serial Execution Time: 255.667202ms
+blockNum: 18999884
+Serial Execution Time: 404.754033ms
+blockNum: 18999885
+Serial Execution Time: 329.42821ms
+blockNum: 18999886
+Serial Execution Time: 387.697912ms
+blockNum: 18999887
+Serial Execution Time: 369.673848ms
+blockNum: 18999888
+Serial Execution Time: 233.074092ms
+blockNum: 18999889
+Serial Execution Time: 389.673056ms
+blockNum: 18999890
+Serial Execution Time: 488.626233ms
+blockNum: 18999891
+Serial Execution Time: 563.373248ms
+blockNum: 18999892
+Serial Execution Time: 376.692285ms
+blockNum: 18999893
+Serial Execution Time: 559.161612ms
+blockNum: 18999894
+Serial Execution Time: 528.44701ms
+blockNum: 18999895
+Serial Execution Time: 666.462429ms
+blockNum: 18999896
+Serial Execution Time: 253.05974ms
+blockNum: 18999897
+Serial Execution Time: 237.415999ms
+blockNum: 18999898
+Serial Execution Time: 315.872102ms
+blockNum: 18999899
+Serial Execution Time: 317.867113ms
+blockNum: 18999900
+Serial Execution Time: 369.575517ms
+blockNum: 18999901
+Serial Execution Time: 271.293265ms
+blockNum: 18999902
+Serial Execution Time: 453.961143ms
+blockNum: 18999903
+Serial Execution Time: 343.127595ms
+blockNum: 18999904
+Serial Execution Time: 499.744278ms
+blockNum: 18999905
+Serial Execution Time: 815.628698ms
+blockNum: 18999906
+Serial Execution Time: 262.955069ms
+blockNum: 18999907
+Serial Execution Time: 414.099627ms
+blockNum: 18999908
+Serial Execution Time: 609.935086ms
+blockNum: 18999909
+Serial Execution Time: 377.054393ms
+blockNum: 18999910
+Serial Execution Time: 330.960716ms
+blockNum: 18999911
+Serial Execution Time: 373.887976ms
+blockNum: 18999912
+Serial Execution Time: 425.761947ms
+blockNum: 18999913
+Serial Execution Time: 447.447877ms
+blockNum: 18999914
+Serial Execution Time: 1.02750761s
+blockNum: 18999915
+Serial Execution Time: 468.253806ms
+blockNum: 18999916
+Serial Execution Time: 345.623965ms
+blockNum: 18999917
+Serial Execution Time: 400.147329ms
+blockNum: 18999918
+Serial Execution Time: 366.376434ms
+blockNum: 18999919
+Serial Execution Time: 301.870229ms
+blockNum: 18999920
+Serial Execution Time: 477.254981ms
+blockNum: 18999921
+Serial Execution Time: 266.230821ms
+blockNum: 18999922
+Serial Execution Time: 461.140408ms
+blockNum: 18999923
+Serial Execution Time: 427.477299ms
+blockNum: 18999924
+Serial Execution Time: 326.646252ms
+blockNum: 18999925
+Serial Execution Time: 422.280238ms
+blockNum: 18999926
+Serial Execution Time: 356.605023ms
+blockNum: 18999927
+Serial Execution Time: 451.780577ms
+blockNum: 18999928
+Serial Execution Time: 538.022159ms
+blockNum: 18999929
+Serial Execution Time: 230.339657ms
+blockNum: 18999930
+Serial Execution Time: 573.61928ms
+blockNum: 18999931
+Serial Execution Time: 330.52954ms
+blockNum: 18999932
+Serial Execution Time: 288.587308ms
+blockNum: 18999933
+Serial Execution Time: 455.068203ms
+blockNum: 18999934
+Serial Execution Time: 357.282932ms
+blockNum: 18999935
+Serial Execution Time: 288.127111ms
+blockNum: 18999936
+Serial Execution Time: 425.777692ms
+blockNum: 18999937
+Serial Execution Time: 390.529323ms
+blockNum: 18999938
+Serial Execution Time: 277.387127ms
+blockNum: 18999939
+Serial Execution Time: 440.984676ms
+blockNum: 18999940
+Serial Execution Time: 270.518097ms
+blockNum: 18999941
+Serial Execution Time: 334.273849ms
+blockNum: 18999942
+Serial Execution Time: 276.917104ms
+blockNum: 18999943
+Serial Execution Time: 287.330474ms
+blockNum: 18999944
+Serial Execution Time: 335.605719ms
+blockNum: 18999945
+Serial Execution Time: 497.06966ms
+blockNum: 18999946
+Serial Execution Time: 356.74206ms
+blockNum: 18999947
+Serial Execution Time: 481.346112ms
+blockNum: 18999948
+Serial Execution Time: 208.217964ms
+blockNum: 18999949
+Serial Execution Time: 532.419084ms
+blockNum: 18999950
+Serial Execution Time: 230.226925ms
+blockNum: 18999951
+Serial Execution Time: 360.269267ms
+blockNum: 18999952
+Serial Execution Time: 249.148962ms
+blockNum: 18999953
+Serial Execution Time: 13.080184ms
+blockNum: 18999954
+Serial Execution Time: 689.751615ms
+blockNum: 18999955
+Serial Execution Time: 345.222653ms
+blockNum: 18999956
+Serial Execution Time: 328.806422ms
+blockNum: 18999957
+Serial Execution Time: 408.941193ms
+blockNum: 18999958
+Serial Execution Time: 307.254258ms
+blockNum: 18999959
+Serial Execution Time: 397.373466ms
+blockNum: 18999960
+Serial Execution Time: 449.855182ms
+blockNum: 18999961
+Serial Execution Time: 331.326275ms
+blockNum: 18999962
+Serial Execution Time: 263.449995ms
+blockNum: 18999963
+Serial Execution Time: 367.674899ms
+blockNum: 18999964
+Serial Execution Time: 524.266898ms
+blockNum: 18999965
+Serial Execution Time: 285.6844ms
+blockNum: 18999966
+Serial Execution Time: 488.298157ms
+blockNum: 18999967
+Serial Execution Time: 337.128047ms
+blockNum: 18999968
+Serial Execution Time: 233.408992ms
+blockNum: 18999969
+Serial Execution Time: 414.587766ms
+blockNum: 18999970
+Serial Execution Time: 453.092187ms
+blockNum: 18999971
+Serial Execution Time: 268.288887ms
+blockNum: 18999972
+Serial Execution Time: 304.652776ms
+blockNum: 18999973
+Serial Execution Time: 319.053963ms
+blockNum: 18999974
+Serial Execution Time: 376.732154ms
+blockNum: 18999975
+Serial Execution Time: 481.835495ms
+blockNum: 18999976
+Serial Execution Time: 303.04281ms
+blockNum: 18999977
+Serial Execution Time: 423.52872ms
+blockNum: 18999978
+Serial Execution Time: 442.835208ms
+blockNum: 18999979
+Serial Execution Time: 459.284473ms
+blockNum: 18999980
+Serial Execution Time: 690.670804ms
+blockNum: 18999981
+Serial Execution Time: 299.649897ms
+blockNum: 18999982
+Serial Execution Time: 306.081958ms
+blockNum: 18999983
+Serial Execution Time: 211.723464ms
+blockNum: 18999984
+Serial Execution Time: 231.98901ms
+blockNum: 18999985
+Serial Execution Time: 482.891552ms
+blockNum: 18999986
+Serial Execution Time: 368.886124ms
+blockNum: 18999987
+Serial Execution Time: 283.426634ms
+blockNum: 18999988
+Serial Execution Time: 489.945839ms
+blockNum: 18999989
+Serial Execution Time: 467.514911ms
+blockNum: 18999990
+Serial Execution Time: 341.876853ms
+blockNum: 18999991
+Serial Execution Time: 269.52976ms
+blockNum: 18999992
+Serial Execution Time: 295.405885ms
+blockNum: 18999993
+Serial Execution Time: 484.436682ms
+blockNum: 18999994
+Serial Execution Time: 423.114487ms
+blockNum: 18999995
+Serial Execution Time: 257.996741ms
+blockNum: 18999996
+Serial Execution Time: 287.252937ms
+blockNum: 18999997
+Serial Execution Time: 262.201404ms
+blockNum: 18999998
+Serial Execution Time: 242.98571ms
+blockNum: 18999999
+Serial Execution Time: 422.001152ms
