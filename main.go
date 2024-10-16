@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"erigonInteract/accesslist"
+	"erigonInteract/blockpilot"
 	"erigonInteract/gria"
-	"erigonInteract/schedule"
 	interactState "erigonInteract/state"
 	"erigonInteract/tracer"
 	"erigonInteract/utils"
@@ -73,6 +73,11 @@ func apexPlusExec(blockReader *freezeblocks.BlockReader, ctx context.Context, db
 	// 贪心分组
 	txGroups := gria.GreedyGrouping(txss, workerNum)
 
+	groupTxsLen := 0
+	for i := 0; i < workerNum; i++ {
+		groupTxsLen += len(txGroups[i])
+	}
+	fmt.Println("groupTxsLen:", groupTxsLen)
 	// 制作Processor
 	GriaProcessor := make([]*utils.GriaGroupWrapper, workerNum)
 	for i := 0; i < workerNum; i++ {
@@ -186,19 +191,58 @@ func apexPlusExec(blockReader *freezeblocks.BlockReader, ctx context.Context, db
 
 }
 
+func CalRWSetNumber(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.Tx, blockNum uint64) {
+	fmt.Println("Cal RWSet Number")
+	for i := 0; i < 500; i = i + 1 {
+		utils.TrueRWSets(blockReader, ctx, dbTx, blockNum+uint64(i))
+	}
+}
+
+func BlockPilotTest(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.Tx, blockNum uint64) {
+	fmt.Println("BlockPilot Test")
+	// TODO: 暂定为10个block，可以根据实际情况调整
+	blocksum := 10
+	// TPS
+	tpss := make([]float64, 0)
+	for i := 0; i < blocksum; i = i + 1 {
+		txsNum, time, _ := blockpilot.BlockPilot(blockReader, ctx, dbTx, blockNum+uint64(i))
+		// calculate TPS
+		tps := float64(txsNum) / float64(time) * 1000
+		tpss = append(tpss, tps)
+		fmt.Println("blockNum ", blockNum+uint64(i), "txs len:", txsNum, "exec time:", time, " TPS:", tps)
+	}
+	// 计算tps的标准差
+	avg := 0.0
+	for _, tps := range tpss {
+		avg += tps
+	}
+	avg = avg / float64(blocksum)
+	variance := 0.0
+	for _, tps := range tpss {
+		variance += (tps - avg) * (tps - avg)
+	}
+	variance = variance / float64(blocksum)
+	fmt.Println("TPS Avg:", avg, "TPS Variance:", variance)
+
+}
+
 func main() {
 
-	ctx, dbTx, blockReader, db := utils.PrepareEnv()
+	ctx, dbTx, blockReader, _ := utils.PrepareEnv()
 
+	// utils.SerialTest(blockReader, ctx, dbTx, 18999999-499)
+
+	// utils.CCTest(blockReader, ctx, dbTx, 18999999-499)
+
+	// utils.MISTest(blockReader, ctx, dbTx, 18999999-499)
+	// utils.DAGTest(blockReader, ctx, dbTx, 18999999-499)
+
+	// pe := schedule.NewPipeLineExecutor()
+	// pe.PipeLineExec(blockReader, ctx, db, 18999999-499)
+
+	// ApesPtest(blockReader, ctx, dbTx, 18999999-499, 64)
+
+	// CalRWSetNumber(blockReader, ctx, dbTx, 18999999-499)
 	utils.SerialTest(blockReader, ctx, dbTx, 18999999-499)
-
-	utils.CCTest(blockReader, ctx, dbTx, 18999999-499)
-
-	utils.MISTest(blockReader, ctx, dbTx, 18999999-499)
-	utils.DAGTest(blockReader, ctx, dbTx, 18999999-499)
-
-	pe := schedule.NewPipeLineExecutor()
-	pe.PipeLineExec(blockReader, ctx, db, 18999999-499)
-
-	ApesPtest(blockReader, ctx, dbTx, 18999999-499, 4)
+	BlockPilotTest(blockReader, ctx, dbTx, 18999999-499)
 }

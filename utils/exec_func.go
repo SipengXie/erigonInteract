@@ -33,9 +33,8 @@ func SerialTest(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx
 	}
 
 	// serial execution
-	for i := 0; i < 500; i++ {
+	for i := 0; i < 10; i++ {
 		blockNum := startBlockNum + uint64(i)
-		fmt.Println("blockNum:", blockNum)
 		serialTime, txsNum, _ := SerialExec(blockReader, ctx, dbTx, blockNum)
 		err = serialWriter.Write([]string{fmt.Sprint(blockNum), fmt.Sprint(serialTime), fmt.Sprint(txsNum)})
 		if err != nil {
@@ -77,7 +76,7 @@ func SerialExec(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx
 	tracer.ExecuteTxs(blkCtx, txs, header, ibs)
 	// cal the execution time
 	elapsed := time.Since(start)
-	fmt.Println("Serial Execution Time:", elapsed)
+	fmt.Println("blockNum:", blockNum, "Serial Execution Time:", elapsed)
 
 	return int64(elapsed.Microseconds()), len(txs), nil
 }

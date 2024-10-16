@@ -103,6 +103,9 @@ func GreedyGrouping(txs types.Transactions, k int) []SortingTxs {
 
 		for {
 			// 寻找一个最大的tx，使得加入后cur_sum不超过average
+			if average < cur_sum {
+				break
+			}
 			find := avlTree.Search(average - cur_sum)
 			if find.Tx == nil {
 				break

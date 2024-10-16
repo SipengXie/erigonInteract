@@ -39,3 +39,16 @@ func CreateRWSetsWithTransactions(fulldb *state.StateWithRwSets, blkCtx evmtypes
 	}
 	return ret, err
 }
+
+func ExecToGenerateRWSet2(scatterDB *state.ScatterState, tx types.Transaction, header *types.Header, blkCtx evmtypes.BlockContext) (*accesslist.RWSet, *core.ExecutionResult, error) {
+	rwSet := accesslist.NewRWSet()
+	scatterDB.SetRWSet(rwSet)
+
+	// evm := vm.NewEVM(core.NewEVMBlockContext(header, chainCtx, &header.Coinbase), vm.TxContext{}, fulldb, params.MainnetChainConfig, vm.Config{})
+	evm := vm.NewEVM(blkCtx, evmtypes.TxContext{}, scatterDB, params.MainnetChainConfig, vm.Config{})
+	res, err := ExecuteTx(scatterDB, tx, header, evm)
+	if err != nil {
+		return nil, nil, err
+	}
+	return rwSet, res, nil
+}

@@ -23,5 +23,14 @@ func TrueRWSets(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx
 			fmt.Println("In TRUERWSetsS, tx hash:", txs[i].Hash())
 		}
 	}
+
+	var rlen, wlen int = 0, 0
+	// 统计RWSet
+	for _, list := range lists {
+		rlen += len(list.ReadSet)
+		wlen += len(list.WriteSet)
+	}
+	// fmt.Println("blockNumber:", blockNum, "ReadSet length:", rlen, ", WriteSet length:", wlen)
+	// fmt.Println("blockNumber:", blockNum, "RWSet sum", rlen+wlen)
 	return lists, nil
 }

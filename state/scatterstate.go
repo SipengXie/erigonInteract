@@ -25,6 +25,8 @@ type ScatterState struct {
 
 	// stores pointers to another sync.Map
 	Storages sync.Map // addr -> *sync.Map (hash -> hash)
+
+	RwSets *accesslist.RWSet
 }
 
 func NewScatterState() *ScatterState {
@@ -34,6 +36,7 @@ func NewScatterState() *ScatterState {
 		Codes:      sync.Map{},
 		CodeHashes: sync.Map{},
 		Storages:   sync.Map{},
+		RwSets:     nil,
 	}
 }
 
@@ -53,6 +56,10 @@ func (s *ScatterState) CreateAccount(addr common.Address, contractCreation bool)
 }
 
 func (s *ScatterState) SubBalance(addr common.Address, value *uint256.Int) {
+	if s.RwSets != nil {
+		s.RwSets.AddWriteSet(addr, accesslist.BALANCE)
+	}
+
 	balance, exists := s.Balances.Load(addr)
 	if !exists {
 		return
@@ -62,6 +69,10 @@ func (s *ScatterState) SubBalance(addr common.Address, value *uint256.Int) {
 }
 
 func (s *ScatterState) AddBalance(addr common.Address, value *uint256.Int) {
+	if s.RwSets != nil {
+		s.RwSets.AddWriteSet(addr, accesslist.BALANCE)
+	}
+
 	balance, exists := s.Balances.Load(addr)
 	if !exists {
 		return
@@ -71,6 +82,10 @@ func (s *ScatterState) AddBalance(addr common.Address, value *uint256.Int) {
 }
 
 func (s *ScatterState) GetBalance(addr common.Address) *uint256.Int {
+	if s.RwSets != nil {
+		s.RwSets.AddReadSet(addr, accesslist.BALANCE)
+	}
+
 	balance, exists := s.Balances.Load(addr)
 	if !exists {
 		return uint256.NewInt(0)
@@ -79,6 +94,10 @@ func (s *ScatterState) GetBalance(addr common.Address) *uint256.Int {
 }
 
 func (s *ScatterState) GetNonce(addr common.Address) uint64 {
+	if s.RwSets != nil {
+		s.RwSets.AddReadSet(addr, accesslist.NONCE)
+	}
+
 	nonce, exists := s.Nonces.Load(addr)
 	if !exists {
 		return 0
@@ -87,10 +106,18 @@ func (s *ScatterState) GetNonce(addr common.Address) uint64 {
 }
 
 func (s *ScatterState) SetNonce(addr common.Address, nonce uint64) {
+	if s.RwSets != nil {
+		s.RwSets.AddWriteSet(addr, accesslist.NONCE)
+	}
+
 	s.Nonces.Store(addr, nonce)
 }
 
 func (s *ScatterState) GetCodeHash(addr common.Address) common.Hash {
+	if s.RwSets != nil {
+		s.RwSets.AddReadSet(addr, accesslist.CODEHASH)
+	}
+
 	codeHash, exists := s.CodeHashes.Load(addr)
 	if !exists {
 		return common.Hash{}
@@ -99,6 +126,10 @@ func (s *ScatterState) GetCodeHash(addr common.Address) common.Hash {
 }
 
 func (s *ScatterState) GetCode(addr common.Address) []byte {
+	if s.RwSets != nil {
+		s.RwSets.AddReadSet(addr, accesslist.CODE)
+	}
+
 	code, exists := s.Codes.Load(addr)
 	if !exists {
 		return []byte{}
@@ -107,11 +138,20 @@ func (s *ScatterState) GetCode(addr common.Address) []byte {
 }
 
 func (s *ScatterState) SetCode(addr common.Address, code []byte) {
+	if s.RwSets != nil {
+		s.RwSets.AddWriteSet(addr, accesslist.CODE)
+		s.RwSets.AddWriteSet(addr, accesslist.CODEHASH)
+	}
+
 	s.Codes.Store(addr, code)
 	s.CodeHashes.Store(addr, crypto.Keccak256Hash(code))
 }
 
 func (s *ScatterState) GetCodeSize(addr common.Address) int {
+	if s.RwSets != nil {
+		s.RwSets.AddReadSet(addr, accesslist.CODE)
+	}
+
 	code, exists := s.Codes.Load(addr)
 	if !exists {
 		return 0
@@ -133,11 +173,19 @@ func (s *ScatterState) GetRefund() uint64 {
 }
 
 func (s *ScatterState) GetCommittedState(addr common.Address, key *common.Hash, value *uint256.Int) {
+	if s.RwSets != nil {
+		s.RwSets.AddReadSet(addr, *key)
+	}
+
 	s.GetState(addr, key, value)
 
 }
 
 func (s *ScatterState) GetState(addr common.Address, key *common.Hash, value *uint256.Int) {
+	if s.RwSets != nil {
+		s.RwSets.AddReadSet(addr, *key)
+	}
+
 	state, exists := s.Storages.Load(addr)
 	if !exists {
 		value.Clear()
@@ -153,6 +201,10 @@ func (s *ScatterState) GetState(addr common.Address, key *common.Hash, value *ui
 }
 
 func (s *ScatterState) SetState(addr common.Address, key *common.Hash, value uint256.Int) {
+	if s.RwSets != nil {
+		s.RwSets.AddWriteSet(addr, *key)
+	}
+
 	state, exists := s.Storages.Load(addr)
 	if !exists {
 		storage := new(sync.Map)
@@ -165,22 +217,39 @@ func (s *ScatterState) SetState(addr common.Address, key *common.Hash, value uin
 }
 
 func (s *ScatterState) GetTransientState(addr common.Address, key common.Hash) uint256.Int {
+	if s.RwSets != nil {
+		s.RwSets.AddReadSet(addr, key)
+	}
+
 	value := uint256.NewInt(0)
 	s.GetState(addr, &key, value)
 	return *value
 }
 
 func (s *ScatterState) SetTransientState(addr common.Address, key common.Hash, value uint256.Int) {
+	if s.RwSets != nil {
+		s.RwSets.AddWriteSet(addr, key)
+	}
+
 	s.SetState(addr, &key, value)
 }
 
 func (s *ScatterState) Selfdestruct(addr common.Address) bool {
+	if s.RwSets != nil {
+		s.RwSets.AddWriteSet(addr, accesslist.ALIVE)
+		s.RwSets.AddWriteSet(addr, accesslist.BALANCE)
+	}
+
 	s.Balances.Store(addr, new(big.Int).SetUint64(0))
 	s.Alive.Store(addr, false)
 	return true
 }
 
 func (s *ScatterState) HasSelfdestructed(addr common.Address) bool {
+	if s.RwSets != nil {
+		s.RwSets.AddReadSet(addr, accesslist.ALIVE)
+	}
+
 	alive, _ := s.Alive.Load(addr)
 	return !alive.(bool)
 }
@@ -260,6 +329,10 @@ func (s *ScatterState) AddPreimage(_ common.Hash, _ []byte) {
 }
 
 func (s *ScatterState) SetBalance(addr common.Address, value *uint256.Int) {
+	if s.RwSets != nil {
+		s.RwSets.AddWriteSet(addr, accesslist.BALANCE)
+	}
+
 	newVal := new(uint256.Int).Set(value)
 	s.Balances.Store(addr, newVal)
 }
@@ -364,4 +437,78 @@ func (s *ScatterState) equal(addr common.Address, hash common.Hash, statedb evmt
 			panic(fmt.Sprintf("State mismatch: %s %s %s", addr.Hex(), value.String(), value2.String()))
 		}
 	}
+}
+
+func (s *ScatterState) SetRWSet(RwSets *accesslist.RWSet) {
+	s.RwSets = RwSets
+}
+
+// copySyncMap 复制 sync.Map 并返回一个新实例
+func copySyncMap(src *sync.Map) *sync.Map {
+	dst := new(sync.Map)
+	src.Range(func(key, value interface{}) bool {
+		dst.Store(key, value)
+		return true
+	})
+	return dst
+}
+
+// copyScatterState 复制 ScatterState
+func CopyScatterState(src *ScatterState) *ScatterState {
+	dst := &ScatterState{}
+
+	// 复制 Balances sync.Map
+	src.Balances.Range(func(key, value interface{}) bool {
+		if balance, ok := value.(*uint256.Int); ok {
+			// 这里假设我们需要深拷贝 *uint256.Int
+			dst.Balances.Store(key, new(uint256.Int).Set(balance))
+		} else {
+			dst.Balances.Store(key, value)
+		}
+		return true
+	})
+
+	// 复制 Nonces sync.Map
+	src.Nonces.Range(func(key, value interface{}) bool {
+		dst.Nonces.Store(key, value) // uint64 是值类型，无需深拷贝
+		return true
+	})
+
+	// 复制 Codes sync.Map
+	src.Codes.Range(func(key, value interface{}) bool {
+		if code, ok := value.([]byte); ok {
+			// 深拷贝 []byte
+			codeCopy := make([]byte, len(code))
+			copy(codeCopy, code)
+			dst.Codes.Store(key, codeCopy)
+		} else {
+			dst.Codes.Store(key, value)
+		}
+		return true
+	})
+
+	// 复制 CodeHashes sync.Map
+	src.CodeHashes.Range(func(key, value interface{}) bool {
+		dst.CodeHashes.Store(key, value) // common.Hash 是值类型，无需深拷贝
+		return true
+	})
+
+	// 复制 Alive sync.Map
+	src.Alive.Range(func(key, value interface{}) bool {
+		dst.Alive.Store(key, value) // bool 是值类型，无需深拷贝
+		return true
+	})
+
+	// 复制 Storages sync.Map
+	src.Storages.Range(func(key, value interface{}) bool {
+		if storageMap, ok := value.(*sync.Map); ok {
+			// 深拷贝嵌套的 *sync.Map
+			dst.Storages.Store(key, copySyncMap(storageMap))
+		} else {
+			dst.Storages.Store(key, value)
+		}
+		return true
+	})
+
+	return dst
 }

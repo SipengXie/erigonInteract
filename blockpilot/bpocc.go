@@ -4,6 +4,7 @@ import (
 	"context"
 	"erigonInteract/accesslist"
 	"fmt"
+	"time"
 
 	interactState "erigonInteract/state"
 	"erigonInteract/tracer"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/ledgerwatch/erigon-lib/common"
 	"github.com/ledgerwatch/erigon-lib/kv"
-	"github.com/ledgerwatch/erigon/core/state"
 	"github.com/ledgerwatch/erigon/core/types"
 	"github.com/ledgerwatch/erigon/core/vm/evmtypes"
 
@@ -27,13 +27,16 @@ var BPMUTEX sync.Mutex
 var Table map[common.Hash]int
 var txStack = stack.New()
 
-func BlockPilot(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.Tx, blockNum uint64) error {
+func BlockPilot(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx kv.Tx, blockNum uint64) (int64, int64, error) {
 	blk, header := utils.GetBlockAndHeader(blockReader, ctx, dbTx, blockNum)
 	// 获取Tx和初始的stateDB
-	txs, _, _ := utils.GetTxsAndPredicts(blockReader, ctx, dbTx, blockNum)
+	txs, predictRwSets, _ := utils.GetTxsAndPredicts(blockReader, ctx, dbTx, blockNum)
 
-	state := utils.GetState(params.MainnetChainConfig, dbTx, blockNum)
-
+	ibs := utils.GetState(params.MainnetChainConfig, dbTx, blockNum)
+	trueRwSets, _ := utils.TrueRWSets(blockReader, ctx, dbTx, blockNum)
+	scatterState := interactState.NewScatterState()
+	scatterState.Prefetch(ibs, predictRwSets)
+	scatterState.Prefetch(ibs, trueRwSets)
 	// 将txs转化成堆栈
 	for _, tx := range txs {
 		txStack.Push(tx)
@@ -45,34 +48,49 @@ func BlockPilot(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx
 
 	// 准备线程池
 	var wg sync.WaitGroup
-	pool, err := ants.NewPool(6)
+
+	// TODO：这里的线程池大小是12，可以根据实际情况调整
+	pool, err := ants.NewPool(12)
 	if err != nil {
 		fmt.Printf("Failed to create pool: %v\n", err)
-		return err
+		return 0, 0, err
 	}
 
-	// 循环执行交易
-	for i := 0; i < txs.Len(); i++ {
-		wg.Add(1)
+	// 准备用于复制的stateDB
+	cachestate := interactState.NewScatterState()
+	cachestate.Prefetch(ibs, predictRwSets)
+	cachestate.Prefetch(ibs, trueRwSets)
 
+	start := time.Now()
+	// 循环执行交易
+	errs := make([]error, 0)
+
+	for txStack.Len() > 0 {
+
+		wg.Add(1)
 		// 提交任务到线程池
 		err := pool.Submit(func() {
 			// tx <- popHead
+			if txStack.Len() == 0 {
+				return
+			}
 			tx := txStack.Pop().(types.Transaction)
 			// snapshot
-			version := state.Snapshot()
+			version := ibs.Snapshot()
 
-			// TODO：反正也不用合并
-			cacheState := state
+			cacheState := interactState.CopyScatterState(cachestate)
 
 			// rs,ws <- Execute
 			rws, err := ExecuteTx(tx, cacheState, header, blkCtx)
-			if err != nil {
-				panic(err)
-			}
+			errs = append(errs, err)
+			// if err != nil {
+			// 	fmt.Printf("Failed to execute tx: %v\n", err)
+			// }
 
 			// DetectConflict
+			BPMUTEX.Lock()
 			DetectConflict(tx, rws, version)
+			BPMUTEX.Unlock()
 
 			wg.Done()
 		})
@@ -83,12 +101,14 @@ func BlockPilot(blockReader *freezeblocks.BlockReader, ctx context.Context, dbTx
 		}
 	}
 
-	return nil
+	// fmt.Println("blockNum:", blockNum, "BlockPilot Time:", time.Since(start))
+	exectime := time.Since(start)
+
+	return int64(txs.Len()), exectime.Milliseconds(), nil
 }
 
-func ExecuteTx(tx types.Transaction, ibs *state.IntraBlockState, header *types.Header, blkCtx evmtypes.BlockContext) (*accesslist.RWSet, error) {
-	fulldb := interactState.NewStateWithRwSets(ibs)
-	rws, _, err := tracer.ExecToGenerateRWSet(fulldb, tx, header, blkCtx)
+func ExecuteTx(tx types.Transaction, sdb *interactState.ScatterState, header *types.Header, blkCtx evmtypes.BlockContext) (*accesslist.RWSet, error) {
+	rws, _, err := tracer.ExecToGenerateRWSet2(sdb, tx, header, blkCtx)
 	if err != nil {
 		return nil, err
 	}
@@ -96,10 +116,12 @@ func ExecuteTx(tx types.Transaction, ibs *state.IntraBlockState, header *types.H
 }
 
 func DetectConflict(tx types.Transaction, rws *accesslist.RWSet, snapshotVersion int) bool {
+	if rws == nil {
+		return true
+	}
 	// 检查键是否存在
 	for _, sValue := range rws.ReadSet {
-		BPMUTEX.Lock()
-		for key, _ := range sValue {
+		for key := range sValue {
 			if version, ok := Table[key]; ok {
 				// 若key存在，则比较version
 				if version > snapshotVersion {
